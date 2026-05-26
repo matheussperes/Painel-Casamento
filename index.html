@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M & G · 01.09.2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4ede2;
+    --bg-deep: #ebe0ce;
+    --ink: #2d2418;
+    --ink-soft: #5a4a32;
+    --ink-faded: #8a7a5c;
+    --accent: #8b3a2f;
+    --accent-soft: #c47b5a;
+    --line: #c9b896;
+    --line-soft: #d9cdb1;
+    --done: #6b8e4e;
+    --doing: #c47b5a;
+    --todo: #8a7a5c;
+    --paper: #fbf6ec;
+    --paper-warm: #f8efdf;
+    --urgent: #a8332a;
+    --medium: #c47b5a;
+    --low: #8a9d7a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    line-height: 1.5;
+    background-image:
+      radial-gradient(at 20% 10%, rgba(196, 123, 90, 0.08) 0%, transparent 50%),
+      radial-gradient(at 80% 90%, rgba(139, 58, 47, 0.06) 0%, transparent 50%);
+    min-height: 100vh;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea, select { font-family: inherit; }
+
+  /* ===== HEADER ===== */
+  header {
+    padding: 48px 32px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  header::before, header::after {
+    content: '✦';
+    position: absolute;
+    top: 50%;
+    color: var(--accent-soft);
+    font-size: 14px;
+    transform: translateY(-50%);
+  }
+  header::before { left: 32px; }
+  header::after { right: 32px; }
+  .monogram {
+    font-family: 'Fraunces', serif;
+    font-size: 72px;
+    font-weight: 400;
+    letter-spacing: -2px;
+    color: var(--accent);
+    line-height: 1;
+    font-style: italic;
+  }
+  .monogram span { color: var(--ink); font-style: normal; margin: 0 16px; font-size: 48px; vertical-align: middle; }
+  .date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-top: 12px;
+  }
+  .countdown {
+    margin-top: 20px;
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    color: var(--ink-soft);
+    letter-spacing: 1px;
+  }
+  .countdown strong { color: var(--accent); font-size: 18px; font-weight: 600; }
+  .sync-status {
+    margin-top: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-faded);
+  }
+  .sync-status.ok { color: var(--done); }
+  .sync-status.err { color: var(--accent); }
+
+  /* ===== NAV ===== */
+  nav {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    padding: 12px 24px;
+    z-index: 100;
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  nav a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    padding: 6px 0;
+    border-bottom: 1px solid transparent;
+    transition: all 0.2s;
+  }
+  nav a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ===== SECTIONS ===== */
+  section {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 56px 32px;
+  }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 42px;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 8px;
+    line-height: 1.1;
+  }
+  h2 em { color: var(--accent); font-style: italic; }
+  .section-desc {
+    color: var(--ink-soft);
+    margin-bottom: 36px;
+    max-width: 600px;
+    font-size: 17px;
+  }
+
+  /* ===== PRIORIDADES ===== */
+  .priority-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .priority-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 24px;
+    position: relative;
+    transition: transform 0.2s;
+    cursor: pointer;
+  }
+  .priority-card:hover { transform: translateY(-2px); }
+  .priority-card .urgency {
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    background: var(--urgent);
+    color: var(--paper);
+    padding: 4px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .priority-card.medium .urgency { background: var(--medium); }
+  .priority-card.low .urgency { background: var(--low); }
+  .priority-card h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 500;
+    margin: 8px 0 12px;
+    color: var(--ink);
+  }
+  .priority-card p {
+    color: var(--ink-soft);
+    font-size: 16px;
+    min-height: 48px;
+  }
+  .priority-card .dates {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+  .priority-card .dates .lbl { color: var(--ink-faded); display: block; margin-bottom: 2px; }
+  .priority-card .dates .val { color: var(--accent); font-size: 11px; }
+  .priority-card .dates .val.empty { color: var(--ink-faded); font-style: italic; }
+
+  /* ===== CALENDÁRIO ===== */
+  .cal-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .cal-nav button {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 8px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .cal-nav button:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .cal-nav .month-name {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-style: italic;
+    color: var(--accent);
+    min-width: 240px;
+    text-align: center;
+  }
+  .cal-grid {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+  }
+  .cal-dow {
+    padding: 12px 8px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-faded);
+    border-bottom: 1px solid var(--line);
+    background: var(--paper-warm);
+  }
+  .cal-day {
+    min-height: 100px;
+    padding: 6px;
+    border-right: 1px solid var(--line-soft);
+    border-bottom: 1px solid var(--line-soft);
+    position: relative;
+    transition: background 0.2s;
+  }
+  .cal-day:nth-child(7n) { border-right: none; }
+  .cal-day.empty { background: var(--bg-deep); opacity: 0.4; }
+  .cal-day.today {
+    background: rgba(196, 123, 90, 0.15);
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+  .cal-day.wedding {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 100%);
+    color: var(--paper);
+  }
+  .cal-day.wedding .day-num { color: var(--paper); }
+  .cal-day-num {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .cal-task {
+    background: var(--bg);
+    border-left: 3px solid var(--todo);
+    padding: 3px 6px;
+    margin-bottom: 3px;
+    font-size: 11px;
+    line-height: 1.2;
+    cursor: pointer;
+    border-radius: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .cal-task:hover { transform: translateX(1px); }
+  .cal-task[data-status="doing"] { border-left-color: var(--doing); }
+  .cal-task[data-status="done"] { border-left-color: var(--done); opacity: 0.5; text-decoration: line-through; }
+  .cal-task[data-priority="urgent"] { background: rgba(168, 51, 42, 0.1); }
+  .cal-task.has-combined { font-weight: 600; }
+  .cal-task.is-deadline { font-style: italic; }
+  .cal-legend {
+    margin-top: 16px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--ink-soft);
+  }
+  .cal-legend span { display: flex; align-items: center; gap: 6px; }
+  .cal-legend .dot { width: 10px; height: 10px; border-left: 3px solid; background: var(--bg); }
+
+  /* ===== TIMELINE HORIZONTAL ===== */
+  .timeline-h {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 24px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 24px;
+  }
+  .timeline-h-side {
+    border-right: 1px solid var(--line);
+    padding-right: 24px;
+  }
+  .timeline-h-side h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-style: italic;
+    margin-bottom: 8px;
+    color: var(--accent);
+  }
+  .timeline-h-side p {
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .timeline-months {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .timeline-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .timeline-month-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 6px;
+  }
+  .timeline-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--todo);
+    padding: 8px 12px;
+    font-size: 14px;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 2px;
+  }
+  .chip:hover { transform: translateY(-1px); border-left-width: 5px; }
+  .chip[data-status="doing"] { border-left-color: var(--doing); }
+  .chip[data-status="done"] { border-left-color: var(--done); opacity: 0.55; text-decoration: line-through; }
+  .chip[data-priority="urgent"] { background: rgba(168, 51, 42, 0.08); }
+  .chip-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-faded);
+    letter-spacing: 1px;
+  }
+
+  /* ===== KANBAN ===== */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+  }
+  .filter-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    padding: 8px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .filter-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .filter-btn.active {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .add-btn {
+    background: var(--accent);
+    color: var(--paper);
+    border: 1px solid var(--accent);
+    padding: 8px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .add-btn:hover { background: var(--ink); border-color: var(--ink); }
+
+  .kanban {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .column {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 18px;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+  }
+  .column.drag-over { background: var(--paper-warm); border-color: var(--accent); }
+  .column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .column-title {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 500;
+    font-style: italic;
+  }
+  .column-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+  .column-body { flex: 1; min-height: 100px; }
+  .task {
+    background: var(--bg);
+    border-left: 3px solid var(--todo);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+    position: relative;
+    border-radius: 2px;
+  }
+  .task[data-status="doing"] { border-left-color: var(--doing); }
+  .task[data-status="done"] { border-left-color: var(--done); opacity: 0.7; }
+  .task[data-status="done"] .task-name { text-decoration: line-through; }
+  .task[data-priority="urgent"] { box-shadow: 0 0 0 1px rgba(168, 51, 42, 0.3); }
+  .task.dragging { opacity: 0.4; }
+  .task-handle {
+    cursor: grab;
+    color: var(--ink-faded);
+    font-size: 14px;
+    margin-bottom: 6px;
+    user-select: none;
+    letter-spacing: 2px;
+  }
+  .task-handle:active { cursor: grabbing; }
+  .task-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 6px;
+    cursor: pointer;
+  }
+  .task-name:hover { color: var(--accent); }
+  .task-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-soft);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .owner {
+    padding: 1px 6px;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+  }
+  .owner.m { color: var(--accent); border-color: var(--accent); }
+  .owner.g { color: var(--done); border-color: var(--done); }
+  .owner.mg { color: var(--ink); border-color: var(--ink); }
+  .task-dates {
+    display: flex;
+    gap: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-faded);
+    letter-spacing: 0.5px;
+    border-top: 1px dashed var(--line-soft);
+    padding-top: 6px;
+    margin-top: 4px;
+  }
+  .task-dates .d-lbl { color: var(--ink-faded); }
+  .task-dates .d-val { color: var(--accent); font-weight: 500; }
+  .task-dates .d-val.empty { color: var(--ink-faded); font-style: italic; }
+  .priority-tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-right: 6px;
+  }
+  .priority-tag.urgent { background: var(--urgent); color: var(--paper); }
+  .priority-tag.medium { background: var(--medium); color: var(--paper); }
+  .priority-tag.low { background: var(--low); color: var(--paper); }
+  .task.hidden { display: none; }
+
+  /* ===== ÁREAS ===== */
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 24px;
+  }
+  .cat {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+  }
+  .cat-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .cat-icon {
+    font-family: 'Fraunces', serif;
+    font-size: 32px;
+    color: var(--accent);
+    font-style: italic;
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+  .cat h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    cursor: pointer;
+  }
+  .cat h3:hover { color: var(--accent); }
+  .cat-progress-wrap { margin-bottom: 12px; }
+  .cat-progress-bar {
+    height: 4px;
+    background: var(--line-soft);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .cat-progress-fill {
+    height: 100%;
+    background: var(--done);
+    transition: width 0.4s;
+  }
+  .cat-progress-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-soft);
+    letter-spacing: 2px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .cat ul { list-style: none; margin-bottom: 12px; flex: 1; }
+  .cat li {
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--line-soft);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+  }
+  .cat li:last-child { border-bottom: none; }
+  .cat li.done { opacity: 0.5; }
+  .cat li.done .item { text-decoration: line-through; }
+  .cat .check {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--ink-soft);
+    border-radius: 2px;
+    flex-shrink: 0;
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+  }
+  .cat li.done .check { background: var(--done); border-color: var(--done); }
+  .cat li.done .check::after {
+    content: '✓';
+    position: absolute;
+    color: var(--paper);
+    font-size: 12px;
+    left: 2px;
+    top: -2px;
+  }
+  .cat .item {
+    flex: 1;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .cat .item:hover { color: var(--accent); }
+  .cat .note {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+  .cat-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+  .cat-btn {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    padding: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .cat-btn:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .cat-btn.add { background: var(--paper-warm); }
+
+  /* ===== MODAL ===== */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(45, 36, 24, 0.6);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    max-width: 540px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 32px;
+    position: relative;
+  }
+  .modal h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+  .modal h3 em { color: var(--accent); font-style: italic; }
+  .modal .sublabel {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  .field input, .field textarea, .field select {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 16px;
+    font-family: 'Cormorant Garamond', serif;
+    transition: border-color 0.2s;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .field textarea { min-height: 80px; resize: vertical; }
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+  .modal-btn {
+    padding: 10px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    flex: 1;
+    transition: all 0.2s;
+  }
+  .modal-btn:hover { background: var(--accent); border-color: var(--accent); }
+  .modal-btn.secondary {
+    background: transparent;
+    color: var(--ink);
+  }
+  .modal-btn.secondary:hover { background: var(--bg); color: var(--ink); }
+  .modal-btn.danger {
+    background: transparent;
+    color: var(--accent);
+    border-color: var(--accent);
+    flex: 0 0 auto;
+  }
+  .modal-btn.danger:hover { background: var(--accent); color: var(--paper); }
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    color: var(--ink-soft);
+    width: 32px;
+    height: 32px;
+  }
+  .modal-close:hover { color: var(--accent); }
+
+  /* ===== ORPHAN PICKER ===== */
+  .orphan-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    padding: 8px;
+  }
+  .orphan-item {
+    padding: 8px 10px;
+    border-bottom: 1px dashed var(--line-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .orphan-item:hover { background: var(--bg); }
+  .orphan-item:last-child { border-bottom: none; }
+  .orphan-item .current-cat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-faded);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ===== FOOTER ===== */
+  footer {
+    text-align: center;
+    padding: 60px 32px 40px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+  footer .quote {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    max-width: 500px;
+    margin: 0 auto 16px;
+    line-height: 1.4;
+  }
+  footer .sig {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-style: normal;
+    margin-top: 16px;
+  }
+
+  /* ===== MOBILE ===== */
+  @media (max-width: 900px) {
+    .monogram { font-size: 56px; }
+    .monogram span { font-size: 36px; margin: 0 10px; }
+    h2 { font-size: 32px; }
+    section { padding: 40px 16px; }
+    .kanban { grid-template-columns: 1fr; }
+    .priority-grid { grid-template-columns: 1fr; }
+    nav { gap: 14px; font-size: 10px; padding: 10px 16px; }
+    header::before, header::after { display: none; }
+    .cal-day { min-height: 70px; padding: 4px; }
+    .cal-day-num { font-size: 12px; }
+    .cal-task { font-size: 9px; padding: 2px 4px; }
+    .cal-nav .month-name { font-size: 22px; min-width: 180px; }
+    .timeline-h { grid-template-columns: 1fr; }
+    .timeline-h-side { border-right: none; border-bottom: 1px solid var(--line); padding-right: 0; padding-bottom: 16px; }
+    .field-row { grid-template-columns: 1fr; }
+    .modal { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="monogram">M <span>&</span> G</div>
+  <div class="date">01 · Setembro · 2026</div>
+  <div class="countdown">faltam <strong id="days">—</strong> dias · <strong>15</strong> finais de semana juntos</div>
+  <div class="sync-status" id="sync-status">— iniciando —</div>
+</header>
+
+<nav>
+  <a href="#agora">Agora</a>
+  <a href="#calendario">Calendário</a>
+  <a href="#timeline">Linha do tempo</a>
+  <a href="#kanban">Quadro</a>
+  <a href="#categorias">Áreas</a>
+</nav>
+
+<!-- AGORA -->
+<section id="agora">
+  <div class="section-label">— para esta semana</div>
+  <h2>O que importa <em>agora</em></h2>
+  <p class="section-desc">As três tarefas com prioridade "urgente" que estão no quadro. Toque para editar.</p>
+  <div class="priority-grid" id="priority-grid"></div>
+</section>
+
+<!-- CALENDÁRIO -->
+<section id="calendario">
+  <div class="section-label">— calendário</div>
+  <h2>O <em>calendário</em></h2>
+  <p class="section-desc">As tarefas aparecem nos dias combinados (negrito) e nos prazos (itálico). Navegue entre os meses.</p>
+
+  <div class="cal-nav">
+    <button id="prev-month">← Anterior</button>
+    <div class="month-name" id="month-name">—</div>
+    <button id="next-month">Próximo →</button>
+  </div>
+  <div class="cal-grid" id="cal-grid"></div>
+  <div class="cal-legend">
+    <span><span class="dot" style="border-color: var(--todo)"></span> A fazer</span>
+    <span><span class="dot" style="border-color: var(--doing)"></span> Fazendo</span>
+    <span><span class="dot" style="border-color: var(--done)"></span> Feito</span>
+    <span><strong style="color:var(--ink)">Negrito</strong> = combinado</span>
+    <span><em style="color:var(--ink)">Itálico</em> = prazo limite</span>
+  </div>
+</section>
+
+<!-- TIMELINE HORIZONTAL -->
+<section id="timeline">
+  <div class="section-label">— linha do tempo</div>
+  <h2>O <em>caminho</em> até lá</h2>
+  <p class="section-desc">Tarefas com prazo, distribuídas pelos meses.</p>
+
+  <div class="timeline-h">
+    <div class="timeline-h-side">
+      <h3>Maio → Setembro</h3>
+      <p>Cada caixinha é uma tarefa. Toque para abrir os detalhes.</p>
+    </div>
+    <div class="timeline-months" id="timeline-months"></div>
+  </div>
+</section>
+
+<!-- KANBAN -->
+<section id="kanban">
+  <div class="section-label">— quadro de tarefas</div>
+  <h2>O <em>quadro</em> da semana</h2>
+  <p class="section-desc">Arraste tarefas entre colunas. Toque no título pra editar. Toque na alça (☰) pra arrastar.</p>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all">Todas</button>
+    <button class="filter-btn" data-filter="m">Matheus</button>
+    <button class="filter-btn" data-filter="g">Gabi</button>
+    <button class="filter-btn" data-filter="mg">Os dois</button>
+    <button class="add-btn" onclick="openTaskModal(null)">+ Nova tarefa</button>
+  </div>
+
+  <div class="kanban">
+    <div class="column" data-column="todo">
+      <div class="column-header">
+        <span class="column-title">A fazer</span>
+        <span class="column-count" id="count-todo">0</span>
+      </div>
+      <div class="column-body" id="col-todo"></div>
+    </div>
+    <div class="column" data-column="doing">
+      <div class="column-header">
+        <span class="column-title">Fazendo</span>
+        <span class="column-count" id="count-doing">0</span>
+      </div>
+      <div class="column-body" id="col-doing"></div>
+    </div>
+    <div class="column" data-column="done">
+      <div class="column-header">
+        <span class="column-title">Feito</span>
+        <span class="column-count" id="count-done">0</span>
+      </div>
+      <div class="column-body" id="col-done"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ÁREAS -->
+<section id="categorias">
+  <div class="section-label">— por área</div>
+  <h2>Tudo <em>organizado</em></h2>
+  <p class="section-desc">Cada área mostra o progresso. Toque numa tarefa para editar, ou use os botões para adicionar.</p>
+
+  <div class="cat-grid" id="cat-grid"></div>
+</section>
+
+<footer>
+  <div class="quote">"A gente tem que ir juntos — no ritmo que funciona pros dois."</div>
+  <div class="sig">M & G · 01 · 09 · 2026</div>
+</footer>
+
+<!-- ===== MODAL: EDIÇÃO DE TAREFA ===== -->
+<div class="modal-bg" id="task-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeTaskModal()">✕</button>
+    <h3 id="modal-title">Nova <em>tarefa</em></h3>
+    <div class="sublabel" id="modal-subtitle">— preencha os detalhes</div>
+
+    <div class="field">
+      <label>Nome</label>
+      <input type="text" id="f-name" placeholder="Ex: Fechar fornecedor de doces">
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Área</label>
+        <select id="f-cat"></select>
+      </div>
+      <div class="field">
+        <label>Responsável</label>
+        <select id="f-owner">
+          <option value="m">Matheus</option>
+          <option value="g">Gabi</option>
+          <option value="mg" selected>Os dois</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Status</label>
+        <select id="f-status">
+          <option value="todo">A fazer</option>
+          <option value="doing">Fazendo</option>
+          <option value="done">Feito</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Prioridade</label>
+        <select id="f-priority">
+          <option value="">— sem —</option>
+          <option value="urgent">Urgente</option>
+          <option value="medium">Média</option>
+          <option value="low">Baixa</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Data combinada</label>
+        <input type="date" id="f-date-do">
+      </div>
+      <div class="field">
+        <label>Prazo limite</label>
+        <input type="date" id="f-date-deadline">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Notas / comentários</label>
+      <textarea id="f-note" placeholder="Detalhes, links, lembretes…"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn danger" id="btn-delete" onclick="deleteTask()">Excluir</button>
+      <button class="modal-btn secondary" onclick="closeTaskModal()">Cancelar</button>
+      <button class="modal-btn" onclick="saveTask()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: TAREFAS ÓRFÃS ===== -->
+<div class="modal-bg" id="orphan-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeOrphanModal()">✕</button>
+    <h3>Adicionar à <em id="orphan-cat-name">área</em></h3>
+    <div class="sublabel">— selecione tarefas para mover</div>
+    <div class="orphan-list" id="orphan-list"></div>
+    <div class="modal-actions">
+      <button class="modal-btn secondary" onclick="closeOrphanModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: GERENCIAR ÁREAS ===== -->
+<div class="modal-bg" id="cat-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeCatModal()">✕</button>
+    <h3>Gerenciar <em>áreas</em></h3>
+    <div class="sublabel">— renomear, criar ou remover áreas</div>
+    <div id="cat-manage-list"></div>
+    <div class="field" style="margin-top:16px;">
+      <label>Adicionar nova área</label>
+      <input type="text" id="f-new-cat" placeholder="Ex: Lua de mel">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn secondary" onclick="closeCatModal()">Fechar</button>
+      <button class="modal-btn" onclick="addNewCategory()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIGURAÇÃO DE SINCRONIZAÇÃO (JSONBin)
+   ============================================================
+   PASSO A PASSO para ativar o sync com a Gabi:
+   1. Acesse https://jsonbin.io e crie uma conta grátis (com Google)
+   2. No menu, vá em "API Keys" e copie sua "X-Master-Key"
+   3. Crie um novo "Bin" com conteúdo: {"tasks":[],"categories":[]}
+   4. Copie o "Bin ID" (aparece na URL do bin)
+   5. Cole abaixo:
+*/
+const JSONBIN_API_KEY = '';      // ← cole sua X-Master-Key aqui
+const JSONBIN_BIN_ID  = '';      // ← cole o Bin ID aqui
+
+// Se deixar vazio, o painel salva no localStorage (só no seu navegador).
+// Quando preencher, sincroniza pra nuvem e a Gabi vê suas atualizações.
+/* ============================================================ */
+
+const SYNC_ENABLED = JSONBIN_API_KEY && JSONBIN_BIN_ID;
+const SYNC_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+const POLL_INTERVAL = 10000; // a cada 10s busca atualizações
+
+// ===== DADOS INICIAIS =====
+const INITIAL_CATS = ['Fornecedores', 'Papelaria', 'Decoração', 'Homenagens', 'Interativo', 'Cerimônia', 'Família', 'Digital'];
+
+const INITIAL_TASKS = [
+  { id: 1, cat: 'Fornecedores', name: 'Assessoria', owner: 'mg', status: 'done', priority: '', dateDo: '', deadline: '', note: '' },
+  { id: 2, cat: 'Fornecedores', name: 'Terno do Matheus', owner: 'm', status: 'doing', priority: 'urgent', dateDo: '2026-05-29', deadline: '2026-05-29', note: 'Visita marcada na sexta. Experimentar e fechar.' },
+  { id: 3, cat: 'Fornecedores', name: 'Gerador', owner: 'm', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-07-15', note: '' },
+  { id: 4, cat: 'Fornecedores', name: 'Cabine de fotos', owner: 'g', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-07-01', note: '' },
+  { id: 5, cat: 'Fornecedores', name: 'Doces finos', owner: 'mg', status: 'doing', priority: 'urgent', dateDo: '2026-05-30', deadline: '2026-05-30', note: 'Receber sábado para degustação.' },
+  { id: 6, cat: 'Fornecedores', name: 'Maquiagem e cabelo da Gabi', owner: 'g', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-06-30', note: '' },
+  { id: 7, cat: 'Fornecedores', name: 'Fechar pré-wedding (Adriano)', owner: 'm', status: 'doing', priority: 'urgent', dateDo: '2026-05-25', deadline: '2026-05-25', note: 'Mandar mensagem hoje.' },
+  { id: 8, cat: 'Fornecedores', name: 'Fechar álbum de fotos (Adriano)', owner: 'm', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-06-15', note: '' },
+
+  { id: 10, cat: 'Papelaria', name: 'Convites', owner: 'mg', status: 'doing', priority: 'urgent', dateDo: '2026-05-27', deadline: '2026-05-27', note: 'Arte definida. Fechar quantidade e fornecedor. Confecção leva 20 dias.' },
+  { id: 11, cat: 'Papelaria', name: 'Lembrancinha (bem casado)', owner: 'mg', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-07-31', note: '' },
+  { id: 12, cat: 'Papelaria', name: 'Topo de bolo', owner: 'mg', status: 'todo', priority: 'low', dateDo: '', deadline: '2026-08-01', note: '' },
+  { id: 13, cat: 'Papelaria', name: 'Papelaria das mesas', owner: 'mg', status: 'todo', priority: 'low', dateDo: '', deadline: '2026-08-01', note: 'Definir juntos.' },
+  { id: 14, cat: 'Papelaria', name: 'Forminha dos doces finos', owner: 'mg', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-07-15', note: 'Fechar após escolher os doces.' },
+
+  { id: 20, cat: 'Decoração', name: 'Espelho', owner: 'g', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-07-15', note: 'Comprar.' },
+  { id: 21, cat: 'Decoração', name: 'Adesivo do espelho', owner: 'm', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-07-15', note: '' },
+  { id: 22, cat: 'Decoração', name: 'Mural de fotos', owner: 'mg', status: 'todo', priority: 'low', dateDo: '', deadline: '2026-08-01', note: 'Standby — definir.' },
+  { id: 23, cat: 'Decoração', name: 'Pano do Jesus', owner: 'mg', status: 'todo', priority: 'low', dateDo: '', deadline: '2026-08-15', note: 'Comprar no Mercado Livre.' },
+  { id: 24, cat: 'Decoração', name: 'Suporte de pão', owner: 'mg', status: 'todo', priority: 'low', dateDo: '', deadline: '2026-08-15', note: 'Resolver mais perto da data.' },
+  { id: 25, cat: 'Decoração', name: 'Suporte de vinho', owner: 'mg', status: 'todo', priority: 'low', dateDo: '', deadline: '2026-08-15', note: 'Resolver mais perto da data.' },
+  { id: 26, cat: 'Decoração', name: 'Quadro com mensagem do Jesus', owner: 'mg', status: 'todo', priority: 'low', dateDo: '', deadline: '2026-08-15', note: '' },
+  { id: 27, cat: 'Decoração', name: 'Vaso para mensagens', owner: 'mg', status: 'todo', priority: 'low', dateDo: '', deadline: '2026-08-15', note: '' },
+
+  { id: 30, cat: 'Homenagens', name: 'Foto / quadro do Pai', owner: 'mg', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-08-15', note: '' },
+  { id: 31, cat: 'Homenagens', name: 'Texto do Pai', owner: 'mg', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-08-15', note: '' },
+  { id: 32, cat: 'Homenagens', name: 'Lenços para chorar', owner: 'mg', status: 'done', priority: '', dateDo: '', deadline: '', note: '' },
+
+  { id: 40, cat: 'Interativo', name: 'Mesa polaroid / Instax', owner: 'm', status: 'doing', priority: 'urgent', dateDo: '2026-05-27', deadline: '2026-05-27', note: 'Falar com Max quarta. Verificar se a Gabi empresta ou se vamos comprar uma máquina.' },
+  { id: 41, cat: 'Interativo', name: 'Álbum para fotos e mensagens', owner: 'g', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-07-31', note: '' },
+  { id: 42, cat: 'Interativo', name: 'Jenga com nome dos noivos', owner: 'mg', status: 'todo', priority: 'low', dateDo: '', deadline: '2026-08-01', note: '' },
+  { id: 43, cat: 'Interativo', name: 'Jogo da velha com as iniciais', owner: 'mg', status: 'todo', priority: 'low', dateDo: '', deadline: '2026-08-01', note: '' },
+
+  { id: 50, cat: 'Cerimônia', name: 'Cronograma do casamento', owner: 'mg', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-08-15', note: '' },
+  { id: 51, cat: 'Cerimônia', name: 'Músicas', owner: 'mg', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-08-15', note: '' },
+  { id: 52, cat: 'Cerimônia', name: 'Estrutura da cerimônia', owner: 'mg', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-08-15', note: '' },
+  { id: 53, cat: 'Cerimônia', name: 'Vinhos (Pinotage)', owner: 'mg', status: 'todo', priority: 'low', dateDo: '', deadline: '2026-08-15', note: '' },
+
+  { id: 60, cat: 'Família', name: 'Cor do vestido das irmãs', owner: 'g', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-06-30', note: '' },
+  { id: 61, cat: 'Família', name: 'Cor do vestido das mães', owner: 'g', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-06-30', note: '' },
+  { id: 62, cat: 'Família', name: 'Cor do terno do Fellipe', owner: 'g', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-06-30', note: '' },
+  { id: 63, cat: 'Família', name: 'Cor do terno do Sr Peres', owner: 'g', status: 'todo', priority: 'medium', dateDo: '', deadline: '2026-06-30', note: '' },
+
+  { id: 70, cat: 'Digital', name: 'Site do casamento', owner: 'mg', status: 'doing', priority: 'urgent', dateDo: '2026-05-28', deadline: '2026-05-28', note: 'Sem o site, o convite não fecha. Definir quinta.' },
+];
+
+// ===== STATE =====
+let state = {
+  tasks: [],
+  categories: [...INITIAL_CATS],
+  filter: 'all',
+  currentMonth: new Date(2026, 4, 1), // Maio 2026
+  editingId: null,
+  pickingFor: null, // categoria sendo preenchida com órfãs
+  lastSync: null,
+};
+
+const STORAGE_KEY = 'mg-painel-v2';
+
+// ===== PERSISTÊNCIA =====
+async function loadData() {
+  if (SYNC_ENABLED) {
+    setSyncStatus('— buscando —', '');
+    try {
+      const res = await fetch(`${SYNC_URL}/latest`, {
+        headers: { 'X-Master-Key': JSONBIN_API_KEY }
+      });
+      if (!res.ok) throw new Error('Falha no fetch');
+      const data = await res.json();
+      const record = data.record || {};
+      if (record.tasks && record.tasks.length > 0) {
+        state.tasks = record.tasks;
+        state.categories = record.categories && record.categories.length > 0 ? record.categories : [...INITIAL_CATS];
+      } else {
+        state.tasks = [...INITIAL_TASKS];
+        state.categories = [...INITIAL_CATS];
+        await saveData();
+      }
+      setSyncStatus(`☁ sincronizado — ${formatTime(new Date())}`, 'ok');
+    } catch (e) {
+      console.error(e);
+      loadLocal();
+      setSyncStatus('⚠ usando dados locais — verifique a configuração JSONBin', 'err');
+    }
+  } else {
+    loadLocal();
+    setSyncStatus('● modo local — configure JSONBin para sincronizar com a Gabi', '');
+  }
+}
+
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      state.tasks = data.tasks || [...INITIAL_TASKS];
+      state.categories = data.categories || [...INITIAL_CATS];
+    } else {
+      state.tasks = [...INITIAL_TASKS];
+      state.categories = [...INITIAL_CATS];
+    }
+  } catch {
+    state.tasks = [...INITIAL_TASKS];
+    state.categories = [...INITIAL_CATS];
+  }
+}
+
+async function saveData() {
+  // sempre salva local como backup
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ tasks: state.tasks, categories: state.categories }));
+  } catch {}
+
+  if (SYNC_ENABLED) {
+    setSyncStatus('— salvando —', '');
+    try {
+      const res = await fetch(SYNC_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': JSONBIN_API_KEY
+        },
+        body: JSON.stringify({ tasks: state.tasks, categories: state.categories })
+      });
+      if (!res.ok) throw new Error('Falha no save');
+      setSyncStatus(`☁ sincronizado — ${formatTime(new Date())}`, 'ok');
+    } catch (e) {
+      console.error(e);
+      setSyncStatus('⚠ falha ao sincronizar (salvo localmente)', 'err');
+    }
+  }
+}
+
+function setSyncStatus(msg, cls) {
+  const el = document.getElementById('sync-status');
+  el.textContent = msg;
+  el.className = 'sync-status ' + (cls || '');
+}
+
+function formatTime(d) {
+  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+// polling pra pegar atualizações da Gabi
+async function pollUpdates() {
+  if (!SYNC_ENABLED) return;
+  try {
+    const res = await fetch(`${SYNC_URL}/latest`, {
+      headers: { 'X-Master-Key': JSONBIN_API_KEY }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const remoteStr = JSON.stringify(data.record || {});
+    const localStr = JSON.stringify({ tasks: state.tasks, categories: state.categories });
+    if (remoteStr !== localStr && data.record && data.record.tasks) {
+      state.tasks = data.record.tasks;
+      state.categories = data.record.categories || [...INITIAL_CATS];
+      renderAll();
+      setSyncStatus(`☁ atualizado da nuvem — ${formatTime(new Date())}`, 'ok');
+    }
+  } catch {}
+}
+
+// ===== COUNTDOWN =====
+function updateCountdown() {
+  const wedding = new Date('2026-09-01T00:00:00-03:00');
+  const today = new Date();
+  const diff = Math.ceil((wedding - today) / (1000 * 60 * 60 * 24));
+  document.getElementById('days').textContent = diff;
+}
+
+// ===== RENDER: AGORA =====
+function renderPriority() {
+  const urgent = state.tasks
+    .filter(t => t.priority === 'urgent' && t.status !== 'done')
+    .slice(0, 3);
+
+  if (urgent.length === 0) {
+    document.getElementById('priority-grid').innerHTML =
+      '<p style="color:var(--ink-soft);font-style:italic;grid-column:1/-1;text-align:center;padding:20px;">Sem urgências no momento. Marque tarefas como "Urgente" pra elas aparecerem aqui.</p>';
+    return;
+  }
+
+  document.getElementById('priority-grid').innerHTML = urgent.map(t => `
+    <div class="priority-card ${t.priority === 'urgent' ? '' : t.priority}" onclick="openTaskModal(${t.id})">
+      <span class="urgency">${t.status === 'doing' ? 'Em andamento' : 'Urgente'}</span>
+      <h3>${escapeHtml(t.name)}</h3>
+      <p>${escapeHtml(t.note || 'Sem notas.')}</p>
+      <div class="dates">
+        <div>
+          <span class="lbl">Combinado</span>
+          <span class="val ${t.dateDo ? '' : 'empty'}">${t.dateDo ? formatDate(t.dateDo) : '—'}</span>
+        </div>
+        <div style="text-align:right;">
+          <span class="lbl">Prazo</span>
+          <span class="val ${t.deadline ? '' : 'empty'}">${t.deadline ? formatDate(t.deadline) : '—'}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===== RENDER: CALENDÁRIO =====
+function renderCalendar() {
+  const m = state.currentMonth;
+  const monthName = m.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  document.getElementById('month-name').textContent =
+    monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+  const firstDay = new Date(m.getFullYear(), m.getMonth(), 1);
+  const lastDay = new Date(m.getFullYear(), m.getMonth() + 1, 0);
+  const startWeekday = firstDay.getDay();
+  const daysInMonth = lastDay.getDate();
+  const today = new Date();
+  const isCurrentMonth = today.getFullYear() === m.getFullYear() && today.getMonth() === m.getMonth();
+
+  let html = '';
+  const dows = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  dows.forEach(d => html += `<div class="cal-dow">${d}</div>`);
+
+  // vazios no início
+  for (let i = 0; i < startWeekday; i++) {
+    html += '<div class="cal-day empty"></div>';
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const isToday = isCurrentMonth && day === today.getDate();
+    const isWedding = m.getFullYear() === 2026 && m.getMonth() === 8 && day === 1;
+
+    // tarefas combinadas para este dia
+    const combined = state.tasks.filter(t => t.dateDo === dateStr);
+    // tarefas com prazo neste dia (e que não estão também na "combined")
+    const deadlines = state.tasks.filter(t => t.deadline === dateStr && t.dateDo !== dateStr);
+
+    let cls = 'cal-day';
+    if (isToday) cls += ' today';
+    if (isWedding) cls += ' wedding';
+
+    let dayHtml = `<div class="${cls}"><div class="cal-day-num">${day}${isWedding ? ' ♥' : ''}</div>`;
+
+    combined.forEach(t => {
+      dayHtml += `<div class="cal-task has-combined" data-status="${t.status}" data-priority="${t.priority}" onclick="openTaskModal(${t.id})" title="${escapeHtml(t.name)}">${escapeHtml(t.name)}</div>`;
+    });
+    deadlines.forEach(t => {
+      dayHtml += `<div class="cal-task is-deadline" data-status="${t.status}" data-priority="${t.priority}" onclick="openTaskModal(${t.id})" title="Prazo: ${escapeHtml(t.name)}">⏳ ${escapeHtml(t.name)}</div>`;
+    });
+
+    dayHtml += '</div>';
+    html += dayHtml;
+  }
+
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+// ===== RENDER: TIMELINE HORIZONTAL =====
+function renderTimeline() {
+  const monthsToShow = [
+    { y: 2026, m: 4, label: 'Maio' },
+    { y: 2026, m: 5, label: 'Junho' },
+    { y: 2026, m: 6, label: 'Julho' },
+    { y: 2026, m: 7, label: 'Agosto' },
+    { y: 2026, m: 8, label: 'Setembro' },
+  ];
+
+  let html = '';
+  monthsToShow.forEach(({ y, m, label }) => {
+    // tarefas cujo prazo cai neste mês (e que não estão concluídas)
+    const monthTasks = state.tasks.filter(t => {
+      if (!t.deadline) return false;
+      const d = new Date(t.deadline + 'T00:00:00');
+      return d.getFullYear() === y && d.getMonth() === m;
+    }).sort((a, b) => a.deadline.localeCompare(b.deadline));
+
+    html += `
+      <div class="timeline-row">
+        <div class="timeline-month-label">${label} · ${y}</div>
+        <div class="timeline-chips">`;
+
+    if (monthTasks.length === 0) {
+      html += '<span style="color:var(--ink-faded);font-style:italic;font-size:14px;">— sem prazos definidos —</span>';
+    } else {
+      monthTasks.forEach(t => {
+        const dayLabel = new Date(t.deadline + 'T00:00:00').getDate();
+        html += `
+          <div class="chip" data-status="${t.status}" data-priority="${t.priority}" onclick="openTaskModal(${t.id})">
+            <span class="chip-date">${String(dayLabel).padStart(2, '0')}</span>
+            <span>${escapeHtml(t.name)}</span>
+          </div>`;
+      });
+    }
+
+    html += '</div></div>';
+  });
+
+  document.getElementById('timeline-months').innerHTML = html;
+}
+
+// ===== RENDER: KANBAN =====
+function renderKanban() {
+  const cols = { todo: '', doing: '', done: '' };
+  const counts = { todo: 0, doing: 0, done: 0 };
+
+  state.tasks.forEach(t => {
+    const visible = state.filter === 'all' || state.filter === t.owner;
+    const ownerLabel = t.owner === 'm' ? 'Matheus' : t.owner === 'g' ? 'Gabi' : 'M & G';
+    const hiddenCls = visible ? '' : ' hidden';
+    const priorityTag = t.priority
+      ? `<span class="priority-tag ${t.priority}">${t.priority === 'urgent' ? 'Urgente' : t.priority === 'medium' ? 'Média' : 'Baixa'}</span>`
+      : '';
+
+    cols[t.status] += `
+      <div class="task${hiddenCls}" data-status="${t.status}" data-priority="${t.priority}" data-id="${t.id}" draggable="true">
+        <div class="task-handle" title="Arrastar">⋮⋮</div>
+        <div class="task-name" onclick="openTaskModal(${t.id})">${escapeHtml(t.name)}</div>
+        <div class="task-meta">
+          <span>${priorityTag}<span class="owner ${t.owner}">${ownerLabel}</span></span>
+          <span>${escapeHtml(t.cat || '')}</span>
+        </div>
+        <div class="task-dates">
+          <span><span class="d-lbl">📅</span> <span class="d-val ${t.dateDo ? '' : 'empty'}">${t.dateDo ? formatDate(t.dateDo) : '—'}</span></span>
+          <span><span class="d-lbl">⏳</span> <span class="d-val ${t.deadline ? '' : 'empty'}">${t.deadline ? formatDate(t.deadline) : '—'}</span></span>
+        </div>
+        ${t.note ? `<div style="margin-top:6px;font-size:13px;color:var(--ink-soft);font-style:italic;line-height:1.3;">${escapeHtml(truncate(t.note, 80))}</div>` : ''}
+      </div>`;
+
+    if (visible) counts[t.status]++;
+  });
+
+  ['todo', 'doing', 'done'].forEach(s => {
+    const el = document.getElementById('col-' + s);
+    el.innerHTML = cols[s] || '<p style="color:var(--ink-faded);font-style:italic;font-size:14px;text-align:center;padding:20px 0;">vazio</p>';
+    document.getElementById('count-' + s).textContent = String(counts[s]).padStart(2, '0');
+  });
+
+  attachDragHandlers();
+}
+
+// ===== RENDER: ÁREAS =====
+function renderCategories() {
+  const cats = {};
+  state.categories.forEach(c => cats[c] = []);
+  state.tasks.forEach(t => {
+    if (!cats[t.cat]) cats[t.cat] = [];
+    cats[t.cat].push(t);
+  });
+
+  let html = '';
+  state.categories.forEach(catName => {
+    const items = cats[catName] || [];
+    const done = items.filter(i => i.status === 'done').length;
+    const pct = items.length > 0 ? Math.round((done / items.length) * 100) : 0;
+
+    html += `
+      <div class="cat">
+        <div class="cat-head">
+          <div>
+            <div class="cat-icon">${catName.charAt(0)}</div>
+            <h3 onclick="renameCategory('${escapeHtml(catName)}')">${escapeHtml(catName)}</h3>
+          </div>
+        </div>
+        <div class="cat-progress-wrap">
+          <div class="cat-progress-bar"><div class="cat-progress-fill" style="width:${pct}%"></div></div>
+          <div class="cat-progress-label">
+            <span>${done} de ${items.length} concluídos</span>
+            <span>${pct}%</span>
+          </div>
+        </div>
+        <ul>
+          ${items.length === 0
+            ? '<li style="font-style:italic;color:var(--ink-faded);font-size:14px;">— sem tarefas —</li>'
+            : items.map(i => `
+              <li class="${i.status === 'done' ? 'done' : ''}">
+                <span class="check" onclick="toggleDone(${i.id})"></span>
+                <span class="item" onclick="openTaskModal(${i.id})">${escapeHtml(i.name)}</span>
+                ${i.deadline ? `<span class="note">${formatDateShort(i.deadline)}</span>` : ''}
+              </li>`).join('')}
+        </ul>
+        <div class="cat-actions">
+          <button class="cat-btn add" onclick="openTaskModal(null, '${escapeHtml(catName)}')">+ Nova</button>
+          <button class="cat-btn" onclick="openOrphanModal('${escapeHtml(catName)}')">Mover tarefas</button>
+        </div>
+      </div>`;
+  });
+
+  // botão pra gerenciar áreas
+  html += `
+    <div class="cat" style="background:transparent;border:2px dashed var(--line);display:flex;align-items:center;justify-content:center;min-height:200px;">
+      <button class="cat-btn add" style="padding:14px 22px;" onclick="openCatModal()">+ Gerenciar áreas</button>
+    </div>`;
+
+  document.getElementById('cat-grid').innerHTML = html;
+}
+
+// ===== HELPERS =====
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+}
+function formatDateShort(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+}
+function truncate(s, n) {
+  return s.length > n ? s.slice(0, n) + '…' : s;
+}
+
+// ===== AÇÕES =====
+function toggleDone(id) {
+  const t = state.tasks.find(x => x.id === id);
+  if (!t) return;
+  t.status = t.status === 'done' ? 'todo' : 'done';
+  saveAndRender();
+}
+
+function saveAndRender() {
+  saveData();
+  renderAll();
+}
+
+function renderAll() {
+  renderPriority();
+  renderCalendar();
+  renderTimeline();
+  renderKanban();
+  renderCategories();
+}
+
+// ===== MODAL: TAREFA =====
+function openTaskModal(id, defaultCat) {
+  state.editingId = id;
+  const modal = document.getElementById('task-modal');
+
+  // popula select de categorias
+  const catSel = document.getElementById('f-cat');
+  catSel.innerHTML = state.categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+
+  if (id) {
+    const t = state.tasks.find(x => x.id === id);
+    if (!t) return;
+    document.getElementById('modal-title').innerHTML = `Editar <em>tarefa</em>`;
+    document.getElementById('modal-subtitle').textContent = '— altere os campos e salve';
+    document.getElementById('f-name').value = t.name;
+    document.getElementById('f-cat').value = t.cat;
+    document.getElementById('f-owner').value = t.owner;
+    document.getElementById('f-status').value = t.status;
+    document.getElementById('f-priority').value = t.priority || '';
+    document.getElementById('f-date-do').value = t.dateDo || '';
+    document.getElementById('f-date-deadline').value = t.deadline || '';
+    document.getElementById('f-note').value = t.note || '';
+    document.getElementById('btn-delete').style.display = '';
+  } else {
+    document.getElementById('modal-title').innerHTML = `Nova <em>tarefa</em>`;
+    document.getElementById('modal-subtitle').textContent = '— preencha os detalhes';
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-cat').value = defaultCat || state.categories[0];
+    document.getElementById('f-owner').value = 'mg';
+    document.getElementById('f-status').value = 'todo';
+    document.getElementById('f-priority').value = '';
+    document.getElementById('f-date-do').value = '';
+    document.getElementById('f-date-deadline').value = '';
+    document.getElementById('f-note').value = '';
+    document.getElementById('btn-delete').style.display = 'none';
+  }
+
+  modal.classList.add('open');
+  setTimeout(() => document.getElementById('f-name').focus(), 100);
+}
+
+function closeTaskModal() {
+  document.getElementById('task-modal').classList.remove('open');
+  state.editingId = null;
+}
+
+function saveTask() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { alert('Coloca um nome pra tarefa.'); return; }
+
+  const data = {
+    name,
+    cat: document.getElementById('f-cat').value,
+    owner: document.getElementById('f-owner').value,
+    status: document.getElementById('f-status').value,
+    priority: document.getElementById('f-priority').value,
+    dateDo: document.getElementById('f-date-do').value,
+    deadline: document.getElementById('f-date-deadline').value,
+    note: document.getElementById('f-note').value.trim(),
+  };
+
+  if (state.editingId) {
+    const t = state.tasks.find(x => x.id === state.editingId);
+    Object.assign(t, data);
+  } else {
+    const newId = Math.max(0, ...state.tasks.map(t => t.id)) + 1;
+    state.tasks.push({ id: newId, ...data });
+  }
+
+  closeTaskModal();
+  saveAndRender();
+}
+
+function deleteTask() {
+  if (!state.editingId) return;
+  if (!confirm('Excluir esta tarefa?')) return;
+  state.tasks = state.tasks.filter(t => t.id !== state.editingId);
+  closeTaskModal();
+  saveAndRender();
+}
+
+// ===== MODAL: TAREFAS ÓRFÃS =====
+function openOrphanModal(catName) {
+  state.pickingFor = catName;
+  document.getElementById('orphan-cat-name').textContent = catName;
+  const others = state.tasks.filter(t => t.cat !== catName);
+  const list = document.getElementById('orphan-list');
+  if (others.length === 0) {
+    list.innerHTML = '<p style="padding:16px;font-style:italic;color:var(--ink-faded);">Não há outras tarefas para mover.</p>';
+  } else {
+    list.innerHTML = others.map(t => `
+      <div class="orphan-item" onclick="moveTaskToCat(${t.id})">
+        <span>${escapeHtml(t.name)}</span>
+        <span class="current-cat">de: ${escapeHtml(t.cat)}</span>
+      </div>
+    `).join('');
+  }
+  document.getElementById('orphan-modal').classList.add('open');
+}
+
+function closeOrphanModal() {
+  document.getElementById('orphan-modal').classList.remove('open');
+  state.pickingFor = null;
+}
+
+function moveTaskToCat(id) {
+  const t = state.tasks.find(x => x.id === id);
+  if (!t || !state.pickingFor) return;
+  t.cat = state.pickingFor;
+  openOrphanModal(state.pickingFor);
+  saveAndRender();
+}
+
+// ===== MODAL: GERENCIAR ÁREAS =====
+function openCatModal() {
+  renderCatManageList();
+  document.getElementById('cat-modal').classList.add('open');
+}
+function closeCatModal() {
+  document.getElementById('cat-modal').classList.remove('open');
+}
+function renderCatManageList() {
+  document.getElementById('cat-manage-list').innerHTML = state.categories.map(c => {
+    const count = state.tasks.filter(t => t.cat === c).length;
+    return `
+      <div class="orphan-item">
+        <span>${escapeHtml(c)} <small style="color:var(--ink-faded);">(${count} tarefas)</small></span>
+        <span>
+          <button class="cat-btn" style="padding:4px 10px;" onclick="renameCategory('${escapeHtml(c)}')">renomear</button>
+          <button class="cat-btn" style="padding:4px 10px;color:var(--accent);" onclick="removeCategory('${escapeHtml(c)}')">remover</button>
+        </span>
+      </div>`;
+  }).join('');
+}
+function addNewCategory() {
+  const name = document.getElementById('f-new-cat').value.trim();
+  if (!name) return;
+  if (state.categories.includes(name)) { alert('Já existe uma área com esse nome.'); return; }
+  state.categories.push(name);
+  document.getElementById('f-new-cat').value = '';
+  renderCatManageList();
+  saveAndRender();
+}
+function renameCategory(oldName) {
+  const newName = prompt('Novo nome da área:', oldName);
+  if (!newName || newName.trim() === '' || newName === oldName) return;
+  if (state.categories.includes(newName)) { alert('Já existe uma área com esse nome.'); return; }
+  const idx = state.categories.indexOf(oldName);
+  if (idx !== -1) state.categories[idx] = newName;
+  state.tasks.forEach(t => { if (t.cat === oldName) t.cat = newName; });
+  renderCatManageList();
+  saveAndRender();
+}
+function removeCategory(name) {
+  const count = state.tasks.filter(t => t.cat === name).length;
+  if (count > 0) {
+    if (!confirm(`A área "${name}" tem ${count} tarefas. Elas serão movidas para "${state.categories[0] === name ? state.categories[1] : state.categories[0]}". Confirmar?`)) return;
+    const fallback = state.categories.find(c => c !== name);
+    state.tasks.forEach(t => { if (t.cat === name) t.cat = fallback; });
+  } else {
+    if (!confirm(`Remover a área "${name}"?`)) return;
+  }
+  state.categories = state.categories.filter(c => c !== name);
+  renderCatManageList();
+  saveAndRender();
+}
+
+// ===== DRAG & DROP =====
+let draggedId = null;
+
+function attachDragHandlers() {
+  document.querySelectorAll('.task').forEach(task => {
+    task.addEventListener('dragstart', (e) => {
+      draggedId = parseInt(task.dataset.id);
+      task.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    task.addEventListener('dragend', () => {
+      task.classList.remove('dragging');
+      document.querySelectorAll('.column').forEach(c => c.classList.remove('drag-over'));
+      draggedId = null;
+    });
+  });
+
+  document.querySelectorAll('.column').forEach(col => {
+    col.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      col.classList.add('drag-over');
+    });
+    col.addEventListener('dragleave', () => {
+      col.classList.remove('drag-over');
+    });
+    col.addEventListener('drop', (e) => {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      if (!draggedId) return;
+      const newStatus = col.dataset.column;
+      const t = state.tasks.find(x => x.id === draggedId);
+      if (t && t.status !== newStatus) {
+        t.status = newStatus;
+        // reordena: move pro topo da nova coluna
+        const idx = state.tasks.indexOf(t);
+        state.tasks.splice(idx, 1);
+        // encontra o primeiro index de outra task com o mesmo status (insere antes dela)
+        const insertAt = state.tasks.findIndex(x => x.status === newStatus);
+        if (insertAt === -1) state.tasks.push(t);
+        else state.tasks.splice(insertAt, 0, t);
+        saveAndRender();
+      }
+    });
+  });
+}
+
+// ===== EVENTOS =====
+document.getElementById('prev-month').addEventListener('click', () => {
+  state.currentMonth = new Date(state.currentMonth.getFullYear(), state.currentMonth.getMonth() - 1, 1);
+  renderCalendar();
+});
+document.getElementById('next-month').addEventListener('click', () => {
+  state.currentMonth = new Date(state.currentMonth.getFullYear(), state.currentMonth.getMonth() + 1, 1);
+  renderCalendar();
+});
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.filter = btn.dataset.filter;
+    renderKanban();
+  });
+});
+
+// fecha modais clicando no fundo
+['task-modal', 'orphan-modal', 'cat-modal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', (e) => {
+    if (e.target.id === id) {
+      if (id === 'task-modal') closeTaskModal();
+      if (id === 'orphan-modal') closeOrphanModal();
+      if (id === 'cat-modal') closeCatModal();
+    }
+  });
+});
+// ESC fecha
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeTaskModal();
+    closeOrphanModal();
+    closeCatModal();
+  }
+});
+
+// ===== INIT =====
+(async function init() {
+  updateCountdown();
+  await loadData();
+  renderAll();
+  if (SYNC_ENABLED) {
+    setInterval(pollUpdates, POLL_INTERVAL);
+  }
+})();
+</script>
+
+</body>
+</html>
