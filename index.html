@@ -238,6 +238,34 @@
   .attach-item .del-attach:hover { color:var(--accent); }
   .attach-preview { max-width:100%; max-height:200px; margin-top:8px; border:1px solid var(--line); }
 
+  /* Abas financeiro */
+  .fin-tabs { display:flex; gap:0; margin-bottom:24px; border-bottom:2px solid var(--line); }
+  .fin-tab { flex:1; padding:12px 16px; text-align:center; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-soft); background:transparent; border:none; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all .2s; cursor:pointer; }
+  .fin-tab:hover { color:var(--accent); }
+  .fin-tab.active { color:var(--accent); border-bottom-color:var(--accent); font-weight:500; }
+  .fin-tab-content { display:none; }
+  .fin-tab-content.active { display:block; }
+  /* Anexos do fornecedor */
+  .sup-attachments { margin-top:12px; padding-top:12px; border-top:1px dashed var(--line-soft); }
+  .sup-attach-label { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-faded); margin-bottom:6px; }
+  .sup-attach-item { display:inline-flex; align-items:center; gap:4px; margin:3px 4px 3px 0; padding:4px 10px; background:var(--bg); border:1px solid var(--line); font-size:13px; }
+  .sup-attach-item a { color:var(--accent); text-decoration:none; }
+  .sup-attach-item a:hover { text-decoration:underline; }
+  .sup-attach-btn { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; background:var(--paper-warm); border:1px solid var(--line); font-size:12px; color:var(--ink-soft); cursor:pointer; transition:all .2s; margin-top:4px; }
+  .sup-attach-btn:hover { border-color:var(--accent); color:var(--accent); }
+  /* Cards de compra pendente */
+  .purchase-card { background:var(--paper); border:1px solid var(--line); padding:20px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .purchase-info { flex:1; }
+  .purchase-info h4 { font-family:'Fraunces',serif; font-size:18px; font-weight:500; margin-bottom:2px; }
+  .purchase-info .purchase-cat { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); }
+  .purchase-info .purchase-est { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--ink-soft); margin-top:4px; }
+  .purchase-info .purchase-note { font-size:14px; color:var(--ink-soft); margin-top:4px; font-style:italic; }
+  .purchase-actions { display:flex; gap:6px; flex-shrink:0; }
+  .purchase-done-btn { padding:6px 14px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; background:var(--done); color:var(--paper); border:none; cursor:pointer; transition:all .2s; }
+  .purchase-done-btn:hover { opacity:.8; }
+  .purchase-edit-btn { padding:6px 14px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; background:transparent; border:1px solid var(--line); color:var(--ink-soft); cursor:pointer; transition:all .2s; }
+  .purchase-edit-btn:hover { border-color:var(--ink); color:var(--ink); }
+
   footer { text-align:center; padding:60px 32px 40px; border-top:1px solid var(--line); color:var(--ink-soft); font-style:italic; }
   footer .quote { font-family:'Fraunces',serif; font-size:22px; max-width:500px; margin:0 auto 16px; line-height:1.4; }
   footer .sig { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; font-style:normal; margin-top:16px; }
@@ -362,10 +390,23 @@
   <div class="section-body" id="fin-body">
     <div class="fin-summary" id="fin-summary"></div>
     <div class="fin-bar-wrap" id="fin-bar"></div>
-    <div class="filter-bar">
-      <button class="add-btn" onclick="openSupplierModal(null)">+ Novo fornecedor</button>
+    <div class="fin-tabs">
+      <button class="fin-tab active" onclick="switchFinTab('fornecedores')">Fornecedores fechados</button>
+      <button class="fin-tab" onclick="switchFinTab('compras')">Compras pendentes</button>
     </div>
-    <div class="fin-grid" id="fin-grid"></div>
+    <div class="fin-tab-content active" id="tab-fornecedores">
+      <div class="filter-bar">
+        <button class="add-btn" onclick="openSupplierModal(null)">+ Novo fornecedor</button>
+      </div>
+      <div class="fin-grid" id="fin-grid"></div>
+    </div>
+    <div class="fin-tab-content" id="tab-compras">
+      <div class="filter-bar">
+        <button class="add-btn" onclick="openPurchaseModal(null)">+ Nova compra pendente</button>
+      </div>
+      <p style="color:var(--ink-soft);margin-bottom:16px;font-size:15px;">Itens que faltam comprar ou fechar. Quando fechar, marque como concluído ou mova para fornecedores.</p>
+      <div class="fin-grid" id="purchase-grid"></div>
+    </div>
   </div>
 </section>
 
@@ -418,10 +459,35 @@
     <div id="sf-parcelas"></div>
     <button class="cat-btn add" style="margin-top:8px;width:100%;" onclick="addParcelaField()">+ Adicionar parcela</button>
   </div>
+  <div class="field"><label>Anexos / Contratos</label>
+    <div class="attach-list" id="sf-attach-list"></div>
+    <div class="attach-zone" id="sf-attach-zone" onclick="document.getElementById('sf-attach-input').click()">📎 Anexar contrato, orçamento, foto…</div>
+    <input type="file" id="sf-attach-input" multiple style="display:none" onchange="handleSupAttach(this.files)">
+  </div>
   <div class="modal-actions">
     <button class="modal-btn danger" id="btn-delete-sup" onclick="deleteSupplier()">Excluir</button>
     <button class="modal-btn secondary" onclick="closeSupplierModal()">Cancelar</button>
     <button class="modal-btn" onclick="saveSupplier()">Salvar</button>
+  </div>
+</div></div>
+
+<!-- MODAL: COMPRA PENDENTE -->
+<div class="modal-bg" id="purchase-modal"><div class="modal">
+  <button class="modal-close" onclick="closePurchaseModal()">✕</button>
+  <h3 id="purchase-modal-title">Nova <em>compra</em></h3>
+  <div class="sublabel">— item que falta comprar</div>
+  <div class="field"><label>O que</label><input type="text" id="pf-name" placeholder="Ex: Bolo de casamento"></div>
+  <div class="field"><label>Categoria</label><input type="text" id="pf-cat" placeholder="Ex: Doces, Decoração…"></div>
+  <div class="field-row">
+    <div class="field"><label>Estimativa de valor</label><input type="number" id="pf-estimate" step="0.01" placeholder="0.00"></div>
+    <div class="field"><label>Prazo para fechar</label><input type="date" id="pf-deadline"></div>
+  </div>
+  <div class="field"><label>Responsável</label><select id="pf-owner"><option value="m">Matheus</option><option value="g">Gabi</option><option value="mg" selected>Os dois</option></select></div>
+  <div class="field"><label>Notas</label><textarea id="pf-note" placeholder="Orçamentos, opções, referências…"></textarea></div>
+  <div class="modal-actions">
+    <button class="modal-btn danger" id="btn-delete-purchase" onclick="deletePurchase()">Excluir</button>
+    <button class="modal-btn secondary" onclick="closePurchaseModal()">Cancelar</button>
+    <button class="modal-btn" onclick="savePurchase()">Salvar</button>
   </div>
 </div></div>
 
@@ -532,10 +598,10 @@ const INITIAL_SUPPLIERS = [
 
 // ===== STATE =====
 let state = {
-  tasks:[],categories:[...INITIAL_CATS],suppliers:[],
+  tasks:[],categories:[...INITIAL_CATS],suppliers:[],purchases:[],
   filter:'all',currentMonth:new Date(2026,4,1),
-  editingId:null,editingSupplierId:null,pickingFor:null,
-  tempAttachments:[],
+  editingId:null,editingSupplierId:null,editingPurchaseId:null,pickingFor:null,
+  tempAttachments:[],tempSupAttachments:[],
 };
 
 // ===== SUPABASE HELPERS =====
@@ -573,9 +639,10 @@ async function loadData() {
     if (data && data.tasks && data.tasks.length > 0) {
       state.tasks = data.tasks.map(t => ({...t, attachments: t.attachments||[]}));
       state.categories = data.categories?.length ? data.categories : [...INITIAL_CATS];
-      state.suppliers = data.suppliers?.length ? data.suppliers : [...INITIAL_SUPPLIERS];
+      state.suppliers = (data.suppliers?.length ? data.suppliers : [...INITIAL_SUPPLIERS]).map(s=>({...s,attachments:s.attachments||[]}));
+      state.purchases = data.purchases || [];
     } else {
-      state.tasks = [...INITIAL_TASKS]; state.categories = [...INITIAL_CATS]; state.suppliers = [...INITIAL_SUPPLIERS];
+      state.tasks = [...INITIAL_TASKS]; state.categories = [...INITIAL_CATS]; state.suppliers = [...INITIAL_SUPPLIERS]; state.purchases = [];
       await saveData();
     }
     setSyncStatus(`☁ sincronizado — ${fmtTime(new Date())}`,'ok');
@@ -587,12 +654,12 @@ async function loadData() {
 function loadLocal() {
   try {
     const d = JSON.parse(localStorage.getItem('mg-painel-v4')||'null');
-    if (d) { state.tasks=d.tasks||[...INITIAL_TASKS]; state.categories=d.categories||[...INITIAL_CATS]; state.suppliers=d.suppliers||[...INITIAL_SUPPLIERS]; }
-    else { state.tasks=[...INITIAL_TASKS]; state.categories=[...INITIAL_CATS]; state.suppliers=[...INITIAL_SUPPLIERS]; }
-  } catch { state.tasks=[...INITIAL_TASKS]; state.categories=[...INITIAL_CATS]; state.suppliers=[...INITIAL_SUPPLIERS]; }
+    if (d) { state.tasks=d.tasks||[...INITIAL_TASKS]; state.categories=d.categories||[...INITIAL_CATS]; state.suppliers=d.suppliers||[...INITIAL_SUPPLIERS]; state.purchases=d.purchases||[]; }
+    else { state.tasks=[...INITIAL_TASKS]; state.categories=[...INITIAL_CATS]; state.suppliers=[...INITIAL_SUPPLIERS]; state.purchases=[]; }
+  } catch { state.tasks=[...INITIAL_TASKS]; state.categories=[...INITIAL_CATS]; state.suppliers=[...INITIAL_SUPPLIERS]; state.purchases=[]; }
 }
 async function saveData() {
-  const payload = { tasks:state.tasks, categories:state.categories, suppliers:state.suppliers };
+  const payload = { tasks:state.tasks, categories:state.categories, suppliers:state.suppliers, purchases:state.purchases };
   try { localStorage.setItem('mg-painel-v4', JSON.stringify(payload)); } catch{}
   setSyncStatus('— salvando —','');
   try { await sbSave(payload); setSyncStatus(`☁ sincronizado — ${fmtTime(new Date())}`,'ok'); }
@@ -603,11 +670,12 @@ async function pollUpdates() {
     const data = await sbGet();
     if (!data) return;
     const remote = JSON.stringify(data);
-    const local = JSON.stringify({tasks:state.tasks,categories:state.categories,suppliers:state.suppliers});
+    const local = JSON.stringify({tasks:state.tasks,categories:state.categories,suppliers:state.suppliers,purchases:state.purchases});
     if (remote !== local) {
       state.tasks = (data.tasks||[]).map(t=>({...t,attachments:t.attachments||[]}));
       state.categories = data.categories||[...INITIAL_CATS];
-      state.suppliers = data.suppliers||[...INITIAL_SUPPLIERS];
+      state.suppliers = (data.suppliers||[...INITIAL_SUPPLIERS]).map(s=>({...s,attachments:s.attachments||[]}));
+      state.purchases = data.purchases||[];
       renderAll();
       setSyncStatus(`☁ atualizado — ${fmtTime(new Date())}`,'ok');
     }
@@ -635,7 +703,7 @@ function toggleSection(id) {
   else { b.classList.add('collapsed'); if(btn)btn.textContent='expandir'; }
 }
 function saveAndRender() { saveData(); renderAll(); }
-function renderAll() { renderPriority(); renderCalendar(); renderTimeline(); renderKanban(); renderCategories(); renderFinanceiro(); }
+function renderAll() { renderPriority(); renderCalendar(); renderTimeline(); renderKanban(); renderCategories(); renderFinanceiro(); renderPurchases(); }
 
 // ===== RENDER: AGORA =====
 function renderPriority() {
@@ -774,10 +842,44 @@ function renderFinanceiro() {
         </div>`;
       }).join('')}</ul>
       <div class="sup-progress"><div class="sup-progress-bar"><div class="sup-progress-fill" style="width:${sPct}%"></div></div><div class="sup-progress-label"><span>Pago: ${fmtMoney(sPago)}</span><span>${sPct}%</span></div></div>
-      <div class="sup-actions"><button class="cat-btn" onclick="openSupplierModal(${s.id})">Editar</button></div>
+      ${s.attachments&&s.attachments.length?`<div class="sup-attachments"><div class="sup-attach-label">Anexos</div>${s.attachments.map(a=>`<span class="sup-attach-item"><a href="${a.url}" target="_blank">📄 ${esc(a.name)}</a></span>`).join('')}</div>`:''}
+      <div class="sup-actions"><button class="cat-btn" onclick="openSupplierModal(${s.id})">Editar</button><button class="sup-attach-btn" onclick="quickSupAttach(${s.id})">📎 Anexar</button></div>
     </div>`;
   });
   document.getElementById('fin-grid').innerHTML=grid;
+}
+
+// ===== RENDER: COMPRAS PENDENTES =====
+function renderPurchases() {
+  const el=document.getElementById('purchase-grid');
+  if(!state.purchases.length){el.innerHTML='<p style="color:var(--ink-faded);font-style:italic;text-align:center;padding:32px;grid-column:1/-1;">Nenhuma compra pendente. Tudo encaminhado! 🎉</p>';return;}
+  let html='';
+  state.purchases.forEach(p=>{
+    const ol=p.owner==='m'?'Matheus':p.owner==='g'?'Gabi':'M & G';
+    html+=`<div class="purchase-card">
+      <div class="purchase-info">
+        <h4>${esc(p.name)}</h4>
+        <div class="purchase-cat">${esc(p.cat||'Geral')} · ${ol}${p.deadline?' · Até '+fmtDate(p.deadline):''}</div>
+        ${p.estimate?`<div class="purchase-est">Estimativa: ${fmtMoney(p.estimate)}</div>`:''}
+        ${p.note?`<div class="purchase-note">${esc(p.note)}</div>`:''}
+      </div>
+      <div class="purchase-actions">
+        <button class="purchase-edit-btn" onclick="openPurchaseModal(${p.id})">Editar</button>
+        <button class="purchase-done-btn" onclick="completePurchase(${p.id})">✓ Feito</button>
+      </div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+function switchFinTab(tab) {
+  document.querySelectorAll('.fin-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.fin-tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelector(`.fin-tab-content#tab-${tab}`).classList.add('active');
+  event.target.classList.add('active');
+}
+function completePurchase(id) {
+  if(!confirm('Marcar como concluído? O item será removido da lista.')) return;
+  state.purchases=state.purchases.filter(p=>p.id!==id); saveAndRender();
 }
 
 // ===== AÇÕES =====
@@ -877,6 +979,7 @@ async function handleTaskAttach(files) {
 
 // ===== MODAL: FORNECEDOR =====
 let parcelaFields=[];
+let supAttachTemp=[];
 function openSupplierModal(id) {
   state.editingSupplierId=id;
   if(id){
@@ -887,6 +990,7 @@ function openSupplierModal(id) {
     document.getElementById('sf-total').value=s.total;
     document.getElementById('sf-note').value=s.note||'';
     parcelaFields=[...s.parcelas.map(p=>({...p}))];
+    supAttachTemp=[...(s.attachments||[])];
     document.getElementById('btn-delete-sup').style.display='';
   } else {
     document.getElementById('sup-modal-title').innerHTML='Novo <em>fornecedor</em>';
@@ -895,10 +999,33 @@ function openSupplierModal(id) {
     document.getElementById('sf-total').value='';
     document.getElementById('sf-note').value='';
     parcelaFields=[];
+    supAttachTemp=[];
     document.getElementById('btn-delete-sup').style.display='none';
   }
   renderParcelaFields();
+  renderSupAttachList();
   document.getElementById('sup-modal').classList.add('open');
+}
+function renderSupAttachList(){
+  const el=document.getElementById('sf-attach-list');
+  if(!supAttachTemp.length){el.innerHTML='';return;}
+  el.innerHTML=supAttachTemp.map((a,i)=>`<div class="attach-item"><a href="${a.url}" target="_blank">${esc(a.name)}</a><span class="del-attach" onclick="supAttachTemp.splice(${i},1);renderSupAttachList();">✕</span></div>`).join('');
+}
+async function handleSupAttach(files){
+  const zone=document.getElementById('sf-attach-zone');
+  zone.classList.add('uploading'); zone.textContent='Enviando…';
+  for(const f of files){ try{const url=await sbUpload(f);supAttachTemp.push({name:f.name,url});}catch(e){alert('Erro: '+e.message);} }
+  zone.classList.remove('uploading'); zone.textContent='📎 Anexar contrato, orçamento, foto…';
+  document.getElementById('sf-attach-input').value='';
+  renderSupAttachList();
+}
+async function quickSupAttach(sId){
+  const input=document.createElement('input');input.type='file';input.multiple=true;
+  input.onchange=async()=>{
+    const s=state.suppliers.find(x=>x.id===sId);if(!s)return;if(!s.attachments)s.attachments=[];
+    for(const f of input.files){try{const url=await sbUpload(f);s.attachments.push({name:f.name,url});}catch(e){alert('Erro: '+e.message);}}
+    saveAndRender();
+  };input.click();
 }
 function closeSupplierModal() { document.getElementById('sup-modal').classList.remove('open'); state.editingSupplierId=null; }
 function renderParcelaFields() {
@@ -917,7 +1044,7 @@ function addParcelaField() { const nid=parcelaFields.length?Math.max(...parcelaF
 function saveSupplier() {
   const name=document.getElementById('sf-name').value.trim();
   if(!name){alert('Coloca um nome.');return;}
-  const data={name,cat:document.getElementById('sf-cat').value.trim(),total:parseFloat(document.getElementById('sf-total').value)||0,note:document.getElementById('sf-note').value.trim(),parcelas:[...parcelaFields]};
+  const data={name,cat:document.getElementById('sf-cat').value.trim(),total:parseFloat(document.getElementById('sf-total').value)||0,note:document.getElementById('sf-note').value.trim(),parcelas:[...parcelaFields],attachments:[...supAttachTemp]};
   if(state.editingSupplierId){const s=state.suppliers.find(x=>x.id===state.editingSupplierId);Object.assign(s,data);}
   else{const nid=Math.max(0,...state.suppliers.map(s=>s.id))+1;state.suppliers.push({id:nid,...data});}
   closeSupplierModal(); saveAndRender();
@@ -934,6 +1061,42 @@ function renderCatManageList() { document.getElementById('cat-manage-list').inne
 function addNewCategory() { const n=document.getElementById('f-new-cat').value.trim(); if(!n)return; if(state.categories.includes(n)){alert('Já existe.');return;} state.categories.push(n); document.getElementById('f-new-cat').value=''; renderCatManageList(); saveAndRender(); }
 function renameCategory(old) { const n=prompt('Novo nome:',old); if(!n||n===old)return; if(state.categories.includes(n)){alert('Já existe.');return;} const i=state.categories.indexOf(old); if(i!==-1)state.categories[i]=n; state.tasks.forEach(t=>{if(t.cat===old)t.cat=n;}); renderCatManageList(); saveAndRender(); }
 function removeCategory(name) { const c=state.tasks.filter(t=>t.cat===name).length; if(c&&!confirm(`"${name}" tem ${c} tarefas. Mover e remover?`))return; if(!c&&!confirm(`Remover "${name}"?`))return; const fb=state.categories.find(x=>x!==name); state.tasks.forEach(t=>{if(t.cat===name)t.cat=fb;}); state.categories=state.categories.filter(x=>x!==name); renderCatManageList(); saveAndRender(); }
+
+// ===== MODAL: COMPRA PENDENTE =====
+function openPurchaseModal(id) {
+  state.editingPurchaseId=id;
+  if(id){
+    const p=state.purchases.find(x=>x.id===id); if(!p)return;
+    document.getElementById('purchase-modal-title').innerHTML='Editar <em>compra</em>';
+    document.getElementById('pf-name').value=p.name;
+    document.getElementById('pf-cat').value=p.cat||'';
+    document.getElementById('pf-estimate').value=p.estimate||'';
+    document.getElementById('pf-deadline').value=p.deadline||'';
+    document.getElementById('pf-owner').value=p.owner||'mg';
+    document.getElementById('pf-note').value=p.note||'';
+    document.getElementById('btn-delete-purchase').style.display='';
+  } else {
+    document.getElementById('purchase-modal-title').innerHTML='Nova <em>compra</em>';
+    document.getElementById('pf-name').value='';
+    document.getElementById('pf-cat').value='';
+    document.getElementById('pf-estimate').value='';
+    document.getElementById('pf-deadline').value='';
+    document.getElementById('pf-owner').value='mg';
+    document.getElementById('pf-note').value='';
+    document.getElementById('btn-delete-purchase').style.display='none';
+  }
+  document.getElementById('purchase-modal').classList.add('open');
+}
+function closePurchaseModal() { document.getElementById('purchase-modal').classList.remove('open'); state.editingPurchaseId=null; }
+function savePurchase() {
+  const name=document.getElementById('pf-name').value.trim();
+  if(!name){alert('Coloca um nome.');return;}
+  const data={name,cat:document.getElementById('pf-cat').value.trim(),estimate:parseFloat(document.getElementById('pf-estimate').value)||0,deadline:document.getElementById('pf-deadline').value,owner:document.getElementById('pf-owner').value,note:document.getElementById('pf-note').value.trim()};
+  if(state.editingPurchaseId){Object.assign(state.purchases.find(x=>x.id===state.editingPurchaseId),data);}
+  else{const nid=state.purchases.length?Math.max(...state.purchases.map(p=>p.id))+1:1;state.purchases.push({id:nid,...data});}
+  closePurchaseModal(); saveAndRender();
+}
+function deletePurchase() { if(!state.editingPurchaseId||!confirm('Excluir?'))return; state.purchases=state.purchases.filter(p=>p.id!==state.editingPurchaseId); closePurchaseModal(); saveAndRender(); }
 
 // ===== DRAG & DROP =====
 let draggedId=null;
@@ -953,14 +1116,20 @@ function attachDragHandlers() {
 document.getElementById('prev-month').addEventListener('click',()=>{state.currentMonth=new Date(state.currentMonth.getFullYear(),state.currentMonth.getMonth()-1,1);renderCalendar();});
 document.getElementById('next-month').addEventListener('click',()=>{state.currentMonth=new Date(state.currentMonth.getFullYear(),state.currentMonth.getMonth()+1,1);renderCalendar();});
 document.querySelectorAll('.filter-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');state.filter=btn.dataset.filter;renderKanban();});});
-['task-modal','orphan-modal','cat-modal','sup-modal'].forEach(id=>{document.getElementById(id).addEventListener('click',e=>{if(e.target.id===id){if(id==='task-modal')closeTaskModal();if(id==='orphan-modal')closeOrphanModal();if(id==='cat-modal')closeCatModal();if(id==='sup-modal')closeSupplierModal();}});});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeTaskModal();closeOrphanModal();closeCatModal();closeSupplierModal();}});
+['task-modal','orphan-modal','cat-modal','sup-modal','purchase-modal'].forEach(id=>{document.getElementById(id).addEventListener('click',e=>{if(e.target.id===id){if(id==='task-modal')closeTaskModal();if(id==='orphan-modal')closeOrphanModal();if(id==='cat-modal')closeCatModal();if(id==='sup-modal')closeSupplierModal();if(id==='purchase-modal')closePurchaseModal();}});});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeTaskModal();closeOrphanModal();closeCatModal();closeSupplierModal();closePurchaseModal();}});
 
-// drag & drop na zona de anexo
+// drag & drop na zona de anexo (tarefas)
 const az=document.getElementById('f-attach-zone');
 az.addEventListener('dragover',e=>{e.preventDefault();az.style.borderColor='var(--accent)';});
 az.addEventListener('dragleave',()=>{az.style.borderColor='';});
 az.addEventListener('drop',e=>{e.preventDefault();az.style.borderColor='';if(e.dataTransfer.files.length)handleTaskAttach(e.dataTransfer.files);});
+
+// drag & drop na zona de anexo (fornecedor)
+const saz=document.getElementById('sf-attach-zone');
+saz.addEventListener('dragover',e=>{e.preventDefault();saz.style.borderColor='var(--accent)';});
+saz.addEventListener('dragleave',()=>{saz.style.borderColor='';});
+saz.addEventListener('drop',e=>{e.preventDefault();saz.style.borderColor='';if(e.dataTransfer.files.length)handleSupAttach(e.dataTransfer.files);});
 
 // ===== INIT =====
 (async function init() {
