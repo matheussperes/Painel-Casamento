@@ -434,6 +434,20 @@
   </div>
 </div></div>
 
+<!-- MODAL: EVENTO ÓRFÃO DO GOOGLE (pergunta se é tarefa do casamento) -->
+<div class="modal-bg" id="gcal-orphan-modal"><div class="modal">
+  <h3>Novo evento no <em>Google Calendar</em></h3>
+  <div class="sublabel">— encontramos algo novo</div>
+  <p style="font-family:'Fraunces',serif;font-size:20px;color:var(--ink);margin-bottom:4px;" id="gcal-orphan-title"></p>
+  <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);letter-spacing:1px;margin-bottom:20px;" id="gcal-orphan-when"></p>
+  <p style="color:var(--ink-soft);margin-bottom:8px;">Esse evento é uma tarefa do casamento?</p>
+  <p style="font-size:13px;color:var(--ink-faded);font-style:italic;">Se for, você vai poder preencher Área, Responsável, Status e Prioridade. Se não for, ele só continua aparecendo no calendário, sem entrar nas outras abas do painel.</p>
+  <div class="modal-actions">
+    <button class="modal-btn secondary" onclick="orphanGcalNo()">Não, ignorar</button>
+    <button class="modal-btn" onclick="orphanGcalYes()">Sim, é do casamento</button>
+  </div>
+</div></div>
+
 <section id="timeline">
   <div class="section-header"><div class="section-header-left">
     <div class="section-label">— linha do tempo</div>
@@ -527,10 +541,13 @@
     <div class="field"><label>Status</label><select id="f-status"><option value="todo">A fazer</option><option value="doing">Fazendo</option><option value="done">Feito</option></select></div>
     <div class="field"><label>Prioridade</label><select id="f-priority"><option value="">— sem —</option><option value="urgent">Urgente</option><option value="medium">Média</option><option value="low">Baixa</option></select></div>
   </div>
-  <div class="field-row">
-    <div class="field"><label>Data combinada</label><input type="date" id="f-date-do"></div>
-    <div class="field"><label>Prazo limite</label><input type="date" id="f-date-deadline"></div>
+  <div class="field"><label>Data combinada</label><input type="date" id="f-date-do"></div>
+  <div class="field-row" id="f-time-row" style="display:none;">
+    <div class="field"><label>Hora início</label><input type="time" id="f-time-start" value="09:00"></div>
+    <div class="field"><label>Hora fim</label><input type="time" id="f-time-end" value="10:00"></div>
   </div>
+  <div class="field"><label>Prazo limite</label><input type="date" id="f-date-deadline"></div>
+  <div class="field" id="f-gcal-status" style="display:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:1px;">📅 sincronizada com o Google Calendar</div>
   <div class="field"><label>Notas</label><textarea id="f-note" placeholder="Detalhes, links…"></textarea></div>
   <!-- TOGGLE: É UMA COMPRA -->
   <div class="purchase-toggle" id="purchase-toggle">
@@ -751,18 +768,18 @@ const INITIAL_SUPPLIERS = [
 
 // ===== STATE =====
 let state = {
-  tasks:[],categories:[...INITIAL_CATS],suppliers:[],
+  tasks:[],categories:[...INITIAL_CATS],suppliers:[],gcalIgnored:[],
   filter:'all',currentMonth:new Date(2026,4,1),
   editingId:null,editingSupplierId:null,pickingFor:null,
   tempAttachments:[],tempSupAttachments:[],
-  boughtTaskId:null,boughtPayment:'cash',
+  boughtTaskId:null,boughtPayment:'cash',pendingOrphanEventId:null,
 };
 
 // ===== GOOGLE CALENDAR STATE =====
 let gcal = {
   tokenClient:null, accessToken:null, tokenExpiry:0,
   events:[], userEmail:'', currentMonth:new Date(2026,4,1),
-  editingEventId:null, editingDate:null, allDay:false,
+  editingEventId:null, editingDate:null, allDay:false, pendingOrphan:null,
 };
 
 // ===== SUPABASE HELPERS =====
@@ -793,29 +810,36 @@ async function sbUpload(file) {
 }
 
 // ===== PERSISTÊNCIA =====
+function normalizeTask(t) {
+  return {...t, attachments:t.attachments||[], isPurchase:t.isPurchase||false, purchaseCat:t.purchaseCat||'',
+    estimate:t.estimate||0, supplierId:t.supplierId||null, timeStart:t.timeStart||'', timeEnd:t.timeEnd||'',
+    googleEventId:t.googleEventId||null, lastSyncedAt:t.lastSyncedAt||null};
+}
 async function loadData() {
   setSyncStatus('— buscando —','');
   try {
     const data = await sbGet();
     if (data && data.tasks && data.tasks.length > 0) {
-      state.tasks = data.tasks.map(t => ({...t, attachments: t.attachments||[], isPurchase: t.isPurchase||false, purchaseCat: t.purchaseCat||'', estimate: t.estimate||0, supplierId: t.supplierId||null}));
+      state.tasks = data.tasks.map(normalizeTask);
       state.categories = data.categories?.length ? data.categories : [...INITIAL_CATS];
       state.suppliers = (data.suppliers?.length ? data.suppliers : [...INITIAL_SUPPLIERS]).map(s=>({...s,attachments:s.attachments||[]}));
+      state.gcalIgnored = data.gcalIgnored||[];
       // Migrar antigas purchases (se existirem) para tasks com isPurchase=true
       if (data.purchases && data.purchases.length) {
         data.purchases.forEach(p => {
           const nid = Math.max(0, ...state.tasks.map(t=>t.id)) + 1;
           state.tasks.push({
             id: nid, name: p.name, cat: 'Fornecedores', owner: p.owner||'mg',
-            status: 'todo', priority: '', dateDo: '', deadline: p.deadline||'',
+            status: 'todo', priority: '', dateDo: '', timeStart:'', timeEnd:'', deadline: p.deadline||'',
             note: p.note||'', attachments: [],
-            isPurchase: true, purchaseCat: p.cat||'', estimate: p.estimate||0, supplierId: null
+            isPurchase: true, purchaseCat: p.cat||'', estimate: p.estimate||0, supplierId: null,
+            googleEventId: null, lastSyncedAt: null
           });
         });
         await saveData();
       }
     } else {
-      state.tasks = [...INITIAL_TASKS]; state.categories = [...INITIAL_CATS]; state.suppliers = [...INITIAL_SUPPLIERS];
+      state.tasks = [...INITIAL_TASKS].map(normalizeTask); state.categories = [...INITIAL_CATS]; state.suppliers = [...INITIAL_SUPPLIERS]; state.gcalIgnored=[];
       await saveData();
     }
     setSyncStatus(`☁ sincronizado — ${fmtTime(new Date())}`,'ok');
@@ -828,15 +852,16 @@ function loadLocal() {
   try {
     const d = JSON.parse(localStorage.getItem('mg-painel-v4')||'null');
     if (d) { 
-      state.tasks=(d.tasks||[...INITIAL_TASKS]).map(t=>({...t,attachments:t.attachments||[],isPurchase:t.isPurchase||false,purchaseCat:t.purchaseCat||'',estimate:t.estimate||0,supplierId:t.supplierId||null}));
+      state.tasks=(d.tasks||[...INITIAL_TASKS]).map(normalizeTask);
       state.categories=d.categories||[...INITIAL_CATS]; 
       state.suppliers=(d.suppliers||[...INITIAL_SUPPLIERS]).map(s=>({...s,attachments:s.attachments||[]}));
+      state.gcalIgnored=d.gcalIgnored||[];
     }
-    else { state.tasks=[...INITIAL_TASKS]; state.categories=[...INITIAL_CATS]; state.suppliers=[...INITIAL_SUPPLIERS]; }
-  } catch { state.tasks=[...INITIAL_TASKS]; state.categories=[...INITIAL_CATS]; state.suppliers=[...INITIAL_SUPPLIERS]; }
+    else { state.tasks=[...INITIAL_TASKS].map(normalizeTask); state.categories=[...INITIAL_CATS]; state.suppliers=[...INITIAL_SUPPLIERS]; state.gcalIgnored=[]; }
+  } catch { state.tasks=[...INITIAL_TASKS].map(normalizeTask); state.categories=[...INITIAL_CATS]; state.suppliers=[...INITIAL_SUPPLIERS]; state.gcalIgnored=[]; }
 }
 async function saveData() {
-  const payload = { tasks:state.tasks, categories:state.categories, suppliers:state.suppliers };
+  const payload = { tasks:state.tasks, categories:state.categories, suppliers:state.suppliers, gcalIgnored:state.gcalIgnored||[] };
   try { localStorage.setItem('mg-painel-v4', JSON.stringify(payload)); } catch{}
   setSyncStatus('— salvando —','');
   try { await sbSave(payload); setSyncStatus(`☁ sincronizado — ${fmtTime(new Date())}`,'ok'); }
@@ -847,11 +872,12 @@ async function pollUpdates() {
     const data = await sbGet();
     if (!data) return;
     const remote = JSON.stringify(data);
-    const local = JSON.stringify({tasks:state.tasks,categories:state.categories,suppliers:state.suppliers});
+    const local = JSON.stringify({tasks:state.tasks,categories:state.categories,suppliers:state.suppliers,gcalIgnored:state.gcalIgnored||[]});
     if (remote !== local) {
-      state.tasks = (data.tasks||[]).map(t=>({...t,attachments:t.attachments||[],isPurchase:t.isPurchase||false,purchaseCat:t.purchaseCat||'',estimate:t.estimate||0,supplierId:t.supplierId||null}));
+      state.tasks = (data.tasks||[]).map(normalizeTask);
       state.categories = data.categories||[...INITIAL_CATS];
       state.suppliers = (data.suppliers||[...INITIAL_SUPPLIERS]).map(s=>({...s,attachments:s.attachments||[]}));
+      state.gcalIgnored = data.gcalIgnored||[];
       renderAll();
       setSyncStatus(`☁ atualizado — ${fmtTime(new Date())}`,'ok');
     }
@@ -1033,10 +1059,137 @@ async function gcalFetchEvents() {
     const data = await res.json();
     gcal.events = data.items || [];
     renderGcalGrid();
+    gcalDetectOrphans();
+    gcalPullUpdatesIntoTasks();
   } catch(e) {
     console.error(e);
     renderGcalError('Não foi possível carregar os eventos do Google Calendar.');
   }
+}
+
+// ===== GOOGLE CALENDAR: SYNC — PUSH (tarefa → Google) =====
+async function gcalSyncTaskToGoogle(task, hadDateBefore) {
+  if (!gcal.accessToken) return; // não conectado, nada a fazer
+  try {
+    if (task.dateDo) {
+      const payload = {
+        summary: task.name,
+        description: gcalBuildDescription(task),
+        start: { dateTime: `${task.dateDo}T${task.timeStart||'09:00'}:00`, timeZone:'America/Sao_Paulo' },
+        end: { dateTime: `${task.dateDo}T${task.timeEnd||'10:00'}:00`, timeZone:'America/Sao_Paulo' },
+      };
+      let ev;
+      if (task.googleEventId) {
+        ev = await gcalUpdateEvent(task.googleEventId, payload);
+      } else {
+        ev = await gcalCreateEvent(payload);
+        task.googleEventId = ev.id;
+      }
+      task.lastSyncedAt = new Date().toISOString();
+      await saveData();
+      if (gcal.currentMonth.getFullYear()===new Date(task.dateDo+'T00:00:00').getFullYear() && gcal.currentMonth.getMonth()===new Date(task.dateDo+'T00:00:00').getMonth()) {
+        gcalFetchEvents();
+      }
+    } else if (hadDateBefore && task.googleEventId) {
+      // Data foi removida: excluir evento do Google e desvincular
+      await gcalDeleteEventApi(task.googleEventId);
+      task.googleEventId = null;
+      task.lastSyncedAt = new Date().toISOString();
+      await saveData();
+      gcalFetchEvents();
+    }
+  } catch(e) {
+    console.error('Erro ao sincronizar tarefa com Google Calendar', e);
+  }
+}
+function gcalBuildDescription(task) {
+  const ownerLabel = task.owner==='m'?'Matheus':task.owner==='g'?'Gabi':'Matheus & Gabi';
+  const lines = [
+    `Área: ${task.cat||'—'}`,
+    `Responsável: ${ownerLabel}`,
+    `Status: ${task.status==='todo'?'A fazer':task.status==='doing'?'Fazendo':'Feito'}`,
+  ];
+  if (task.priority) lines.push(`Prioridade: ${task.priority==='urgent'?'Urgente':task.priority==='medium'?'Média':'Baixa'}`);
+  if (task.isPurchase) lines.push(`💰 Compra${task.purchaseCat?' · '+task.purchaseCat:''}`);
+  if (task.note) lines.push('', task.note);
+  lines.push('', '— sincronizado automaticamente pelo Painel M & G');
+  return lines.join('\n');
+}
+
+// ===== GOOGLE CALENDAR: SYNC — PULL (Google → tarefa) =====
+function gcalPullUpdatesIntoTasks() {
+  // Para eventos já vinculados a uma tarefa, verifica se foram editados no Google
+  // desde a última sincronização, e nesse caso atualiza a tarefa ("quem salvou por
+  // último vence" -- comparamos o 'updated' do Google com o lastSyncedAt da tarefa).
+  let changed = false;
+  gcal.events.forEach(ev => {
+    const task = state.tasks.find(t => t.googleEventId === ev.id);
+    if (!task) return;
+    const googleUpdated = new Date(ev.updated).getTime();
+    const lastSynced = task.lastSyncedAt ? new Date(task.lastSyncedAt).getTime() : 0;
+    if (googleUpdated > lastSynced + 2000) {
+      // Google venceu: traz nome, data e horário de volta pra tarefa
+      const newDate = gcalEventDateStr(ev,'start');
+      if (ev.summary && ev.summary !== task.name) { task.name = ev.summary; changed = true; }
+      if (newDate && newDate !== task.dateDo) { task.dateDo = newDate; changed = true; }
+      if (ev.start?.dateTime) {
+        const st = ev.start.dateTime.slice(11,16), et = ev.end?.dateTime?.slice(11,16)||task.timeEnd;
+        if (st !== task.timeStart) { task.timeStart = st; changed = true; }
+        if (et !== task.timeEnd) { task.timeEnd = et; changed = true; }
+      }
+      task.lastSyncedAt = new Date().toISOString();
+    }
+  });
+  if (changed) { saveData(); renderAll(); setSyncStatus('☁ tarefa atualizada a partir do Google Calendar','ok'); }
+}
+
+// ===== GOOGLE CALENDAR: EVENTOS ÓRFÃOS =====
+function gcalDetectOrphans() {
+  const linkedIds = new Set(state.tasks.map(t=>t.googleEventId).filter(Boolean));
+  const ignoredIds = new Set(state.gcalIgnored||[]);
+  const orphan = gcal.events.find(ev => !linkedIds.has(ev.id) && !ignoredIds.has(ev.id));
+  if (orphan) openOrphanGcalModal(orphan);
+}
+function openOrphanGcalModal(ev) {
+  if (document.getElementById('gcal-orphan-modal').classList.contains('open')) return; // já tem um aberto
+  gcal.pendingOrphan = ev;
+  document.getElementById('gcal-orphan-title').textContent = ev.summary || '(sem título)';
+  const sd = gcalEventDateStr(ev,'start');
+  let when = '';
+  if (sd) {
+    const d = new Date(sd+'T00:00:00');
+    when = d.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+    if (ev.start?.dateTime) when += ' às '+new Date(ev.start.dateTime).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  }
+  document.getElementById('gcal-orphan-when').textContent = when;
+  document.getElementById('gcal-orphan-modal').classList.add('open');
+}
+function closeOrphanGcalModal() { document.getElementById('gcal-orphan-modal').classList.remove('open'); gcal.pendingOrphan=null; }
+function orphanGcalNo() {
+  const ev = gcal.pendingOrphan;
+  if (ev) { state.gcalIgnored = [...(state.gcalIgnored||[]), ev.id]; saveData(); }
+  closeOrphanGcalModal();
+  setTimeout(gcalDetectOrphans, 300); // verifica se há outro órfão na fila
+}
+function orphanGcalYes() {
+  const ev = gcal.pendingOrphan;
+  closeOrphanGcalModal();
+  if (!ev) return;
+  // Abre o modal de tarefa completo, pré-preenchido com dados do Google
+  openTaskModal(null);
+  document.getElementById('f-name').value = ev.summary || '';
+  const sd = gcalEventDateStr(ev,'start');
+  if (sd) {
+    document.getElementById('f-date-do').value = sd;
+    if (ev.start?.dateTime) {
+      document.getElementById('f-time-start').value = ev.start.dateTime.slice(11,16);
+      document.getElementById('f-time-end').value = ev.end?.dateTime ? ev.end.dateTime.slice(11,16) : '10:00';
+    }
+    toggleTimeFieldsVisibility();
+  }
+  if (ev.description) document.getElementById('f-note').value = ev.description;
+  // Marca pendingGoogleEventId pra vincular ao salvar
+  state.pendingOrphanEventId = ev.id;
 }
 
 // ===== GOOGLE CALENDAR: CRUD =====
@@ -1306,13 +1459,15 @@ function renderKanban() {
     const pt=t.priority?`<span class="priority-tag ${t.priority}">${t.priority==='urgent'?'Urgente':t.priority==='medium'?'Média':'Baixa'}</span>`:'';
     const ft=t.isPurchase?(t.supplierId?`<span class="fin-tag bought">💰 Comprado</span>`:`<span class="fin-tag">💰 Compra</span>`):'';
     const ai=t.attachments&&t.attachments.length?'<span class="task-attach-icon">📎</span>':'';
+    const gt=t.googleEventId?`<span class="fin-tag" style="background:var(--paper-warm);border-color:var(--accent);color:var(--accent);" title="Sincronizada com o Google Calendar">📅 Google</span>`:'';
+    const noDateHighlight=(!t.dateDo && t.lastSyncedAt)?' style="box-shadow:0 0 0 1px var(--accent-soft);"':'';
     const thumbs=t.attachments&&t.attachments.length?`<div class="task-thumbs">${renderAttachThumbsInline(t.attachments)}</div>`:'';
-    cols[t.status]+=`<div class="task${hc}" data-status="${t.status}" data-priority="${t.priority}" data-id="${t.id}" data-purchase="${t.isPurchase?1:0}" data-bought="${t.supplierId?1:0}" draggable="true">
+    cols[t.status]+=`<div class="task${hc}" data-status="${t.status}" data-priority="${t.priority}" data-id="${t.id}" data-purchase="${t.isPurchase?1:0}" data-bought="${t.supplierId?1:0}" draggable="true"${noDateHighlight}>
       <div class="task-handle">⋮⋮</div>
       <div class="task-name" onclick="openTaskModal(${t.id})">${esc(t.name)}${ai}</div>
-      <div class="task-meta"><span>${ft}${pt}<span class="owner ${t.owner}">${ol}</span></span><span>${esc(t.cat||'')}</span></div>
+      <div class="task-meta"><span>${ft}${gt}${pt}<span class="owner ${t.owner}">${ol}</span></span><span>${esc(t.cat||'')}</span></div>
       ${t.isPurchase?`<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent);margin-bottom:4px;letter-spacing:1px;">${esc(t.purchaseCat||'')}${t.estimate?' · ~'+fmtMoney(t.estimate):''}</div>`:''}
-      <div class="task-dates"><span>📅 <span class="d-val ${t.dateDo?'':'empty'}">${t.dateDo?fmtDate(t.dateDo):'—'}</span></span><span>⏳ <span class="d-val ${t.deadline?'':'empty'}">${t.deadline?fmtDate(t.deadline):'—'}</span></span></div>
+      <div class="task-dates"><span>📅 <span class="d-val ${t.dateDo?'':'empty'}">${t.dateDo?fmtDate(t.dateDo)+(t.timeStart?' '+t.timeStart:''):'—'}</span></span><span>⏳ <span class="d-val ${t.deadline?'':'empty'}">${t.deadline?fmtDate(t.deadline):'—'}</span></span></div>
       ${t.note?`<div style="margin-top:6px;font-size:13px;color:var(--ink-soft);font-style:italic;line-height:1.3;">${esc(truncate(t.note,80))}</div>`:''}
       ${thumbs}
     </div>`;
@@ -1487,6 +1642,8 @@ function openTaskModal(id, defaultCat, isNewPurchase) {
     document.getElementById('f-status').value=t.status;
     document.getElementById('f-priority').value=t.priority||'';
     document.getElementById('f-date-do').value=t.dateDo||'';
+    document.getElementById('f-time-start').value=t.timeStart||'09:00';
+    document.getElementById('f-time-end').value=t.timeEnd||'10:00';
     document.getElementById('f-date-deadline').value=t.deadline||'';
     document.getElementById('f-note').value=t.note||'';
     document.getElementById('f-is-purchase').checked=!!t.isPurchase;
@@ -1494,6 +1651,7 @@ function openTaskModal(id, defaultCat, isNewPurchase) {
     document.getElementById('f-estimate').value=t.estimate||'';
     state.tempAttachments=[...(t.attachments||[])];
     document.getElementById('btn-delete').style.display='';
+    document.getElementById('f-gcal-status').style.display=t.googleEventId?'':'none';
   } else {
     document.getElementById('modal-title').innerHTML=isNewPurchase?'Nova <em>compra</em>':'Nova <em>tarefa</em>';
     document.getElementById('f-name').value='';
@@ -1502,6 +1660,8 @@ function openTaskModal(id, defaultCat, isNewPurchase) {
     document.getElementById('f-status').value='todo';
     document.getElementById('f-priority').value='';
     document.getElementById('f-date-do').value='';
+    document.getElementById('f-time-start').value='09:00';
+    document.getElementById('f-time-end').value='10:00';
     document.getElementById('f-date-deadline').value='';
     document.getElementById('f-note').value='';
     document.getElementById('f-is-purchase').checked=!!isNewPurchase;
@@ -1509,11 +1669,17 @@ function openTaskModal(id, defaultCat, isNewPurchase) {
     document.getElementById('f-estimate').value='';
     state.tempAttachments=[];
     document.getElementById('btn-delete').style.display='none';
+    document.getElementById('f-gcal-status').style.display='none';
   }
   togglePurchaseFields();
+  toggleTimeFieldsVisibility();
   renderAttachList();
   document.getElementById('task-modal').classList.add('open');
   setTimeout(()=>document.getElementById('f-name').focus(),100);
+}
+function toggleTimeFieldsVisibility(){
+  const hasDate=!!document.getElementById('f-date-do').value;
+  document.getElementById('f-time-row').style.display=hasDate?'':'none';
 }
 function togglePurchaseFields(){
   const cb=document.getElementById('f-is-purchase');
@@ -1533,9 +1699,11 @@ function saveTask() {
   if(!name){alert('Coloca um nome.');return;}
   const isPurchase=document.getElementById('f-is-purchase').checked;
   const newStatus=document.getElementById('f-status').value;
+  const newDateDo=document.getElementById('f-date-do').value;
   const data={name,cat:document.getElementById('f-cat').value,owner:document.getElementById('f-owner').value,
     status:newStatus,priority:document.getElementById('f-priority').value,
-    dateDo:document.getElementById('f-date-do').value,deadline:document.getElementById('f-date-deadline').value,
+    dateDo:newDateDo,timeStart:document.getElementById('f-time-start').value,timeEnd:document.getElementById('f-time-end').value,
+    deadline:document.getElementById('f-date-deadline').value,
     note:document.getElementById('f-note').value.trim(),attachments:[...state.tempAttachments],
     isPurchase,
     purchaseCat:isPurchase?document.getElementById('f-purchase-cat').value:'',
@@ -1544,8 +1712,11 @@ function saveTask() {
   // Detectar transição para 'done' em uma compra que ainda não foi comprada
   let shouldOpenBought=false;
   let savedTaskId=null;
+  let hadDateBefore=false, prevGoogleEventId=null;
   if(state.editingId){
     const existing=state.tasks.find(x=>x.id===state.editingId);
+    hadDateBefore=!!existing.dateDo;
+    prevGoogleEventId=existing.googleEventId||null;
     const wasNotBought=!existing.supplierId;
     const willBeDone=newStatus==='done';
     const wasNotDone=existing.status!=='done';
@@ -1553,10 +1724,14 @@ function saveTask() {
       shouldOpenBought=true;
     }
     data.supplierId=existing.supplierId||null;
+    data.googleEventId=existing.googleEventId||null;
+    data.lastSyncedAt=existing.lastSyncedAt||null;
     Object.assign(existing,data);
     savedTaskId=existing.id;
   } else {
     data.supplierId=null;
+    data.googleEventId=state.pendingOrphanEventId||null;
+    data.lastSyncedAt=state.pendingOrphanEventId?new Date().toISOString():null;
     const nid=Math.max(0,...state.tasks.map(t=>t.id))+1;
     state.tasks.push({id:nid,...data});
     savedTaskId=nid;
@@ -1565,7 +1740,13 @@ function saveTask() {
       shouldOpenBought=true;
     }
   }
+  const cameFromOrphan=!!state.pendingOrphanEventId;
+  state.pendingOrphanEventId=null;
   closeTaskModal(); saveAndRender();
+  // Sincronizar com Google Calendar em segundo plano (não recriar se veio de um órfão já vinculado)
+  const savedTask=state.tasks.find(t=>t.id===savedTaskId);
+  if(savedTask && !cameFromOrphan) gcalSyncTaskToGoogle(savedTask, hadDateBefore);
+  else if(savedTask && cameFromOrphan) gcalSyncTaskToGoogle(savedTask, true); // garante description atualizada
   if(shouldOpenBought){
     // Reverter status pra todo até confirmar a compra
     const t=state.tasks.find(x=>x.id===savedTaskId);
@@ -1573,7 +1754,13 @@ function saveTask() {
     openBoughtModal(savedTaskId);
   }
 }
-function deleteTask() { if(!state.editingId||!confirm('Excluir esta tarefa?'))return; state.tasks=state.tasks.filter(t=>t.id!==state.editingId); closeTaskModal(); saveAndRender(); }
+function deleteTask() {
+  if(!state.editingId||!confirm('Excluir esta tarefa?'))return;
+  const t=state.tasks.find(x=>x.id===state.editingId);
+  if(t && t.googleEventId) gcalDeleteEventApi(t.googleEventId).catch(()=>{});
+  state.tasks=state.tasks.filter(t=>t.id!==state.editingId);
+  closeTaskModal(); saveAndRender();
+}
 
 // ===== ANEXOS NAS TAREFAS =====
 function renderAttachList() {
@@ -1822,6 +2009,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeTaskModal();cl
 
 // drag & drop na zona de anexo (tarefas)
 const az=document.getElementById('f-attach-zone');
+document.getElementById('f-date-do').addEventListener('change',toggleTimeFieldsVisibility);
 az.addEventListener('dragover',e=>{e.preventDefault();az.style.borderColor='var(--accent)';});
 az.addEventListener('dragleave',()=>{az.style.borderColor='';});
 az.addEventListener('drop',e=>{e.preventDefault();az.style.borderColor='';if(e.dataTransfer.files.length)handleTaskAttach(e.dataTransfer.files);});
@@ -1838,9 +2026,11 @@ saz.addEventListener('drop',e=>{e.preventDefault();saz.style.borderColor='';if(e
   await loadData();
   if (gcalTryRestoreToken()) {
     await gcalFetchUserInfo();
+    gcalFetchEvents(); // já busca e detecta órfãos/atualizações mesmo sem abrir a aba
   }
   renderAll();
   setInterval(pollUpdates, POLL_INTERVAL);
+  setInterval(()=>{ if(gcal.accessToken) gcalFetchEvents(); }, POLL_INTERVAL*3);
 })();
 </script>
 </body>
