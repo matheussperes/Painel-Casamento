@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root {
     --bg: #f4ede2; --bg-deep: #ebe0ce; --ink: #2d2418; --ink-soft: #5a4a32;
@@ -69,9 +70,11 @@
   .cal-nav .month-name { font-family:'Fraunces',serif; font-size:28px; font-style:italic; color:var(--accent); min-width:240px; text-align:center; }
   .cal-grid { background:var(--paper); border:1px solid var(--line); display:grid; grid-template-columns:repeat(7,1fr); }
   .cal-dow { padding:12px 8px; text-align:center; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-faded); border-bottom:1px solid var(--line); background:var(--paper-warm); }
-  .cal-day { min-height:100px; padding:6px; border-right:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); position:relative; }
+  .cal-day { min-height:100px; padding:6px; border-right:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); position:relative; cursor:pointer; transition:background .15s; }
+  .cal-day:hover { background:var(--paper-warm); }
   .cal-day:nth-child(7n) { border-right:none; }
-  .cal-day.empty { background:var(--bg-deep); opacity:.4; }
+  .cal-day.empty { background:var(--bg-deep); opacity:.4; cursor:default; }
+  .cal-day.empty:hover { background:var(--bg-deep); }
   .cal-day.today { background:rgba(196,123,90,.15); box-shadow:inset 0 0 0 2px var(--accent); }
   .cal-day.wedding { background:linear-gradient(135deg,var(--accent),var(--accent-soft)); color:var(--paper); }
   .cal-day.wedding .cal-day-num { color:var(--paper); }
@@ -81,9 +84,26 @@
   .cal-task[data-status="done"] { border-left-color:var(--done); opacity:.5; text-decoration:line-through; }
   .cal-task.has-combined { font-weight:600; }
   .cal-task.is-deadline { font-style:italic; }
+  .cal-task.gcal-event { border-left-color:var(--accent); background:var(--paper-warm); }
+  .cal-day.wedding .cal-task.gcal-event { background:rgba(255,255,255,.25); border-left-color:var(--paper); color:var(--paper); }
   .cal-legend { margin-top:16px; display:flex; gap:24px; flex-wrap:wrap; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; color:var(--ink-soft); }
   .cal-legend span { display:flex; align-items:center; gap:6px; }
   .cal-legend .dot { width:10px; height:10px; border-left:3px solid; background:var(--bg); }
+
+  /* ===== GOOGLE CALENDAR ===== */
+  .gcal-connect-wrap { text-align:center; padding:60px 24px; background:var(--paper); border:1px solid var(--line); }
+  .gcal-connect-wrap .gcal-icon { font-size:40px; margin-bottom:16px; }
+  .gcal-connect-wrap h3 { font-family:'Fraunces',serif; font-size:24px; font-weight:500; margin-bottom:8px; }
+  .gcal-connect-wrap p { color:var(--ink-soft); margin-bottom:24px; max-width:420px; margin-left:auto; margin-right:auto; }
+  .gcal-connect-btn { background:var(--accent); color:var(--paper); border:1px solid var(--accent); padding:12px 28px; font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:2px; text-transform:uppercase; transition:all .2s; }
+  .gcal-connect-btn:hover { background:var(--ink); border-color:var(--ink); }
+  .gcal-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+  .gcal-account { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft); letter-spacing:1px; }
+  .gcal-account strong { color:var(--accent); }
+  .gcal-disconnect { background:transparent; border:1px solid var(--line); color:var(--ink-soft); padding:6px 14px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; transition:all .2s; }
+  .gcal-disconnect:hover { border-color:var(--accent); color:var(--accent); }
+  .gcal-loading { text-align:center; padding:40px; color:var(--ink-faded); font-style:italic; }
+  .gcal-error { background:var(--paper-warm); border:1px solid var(--urgent); color:var(--urgent); padding:16px; text-align:center; font-size:14px; margin-bottom:16px; }
 
   .timeline-h { display:grid; grid-template-columns:200px 1fr; gap:24px; background:var(--paper); border:1px solid var(--line); padding:24px; }
   .timeline-h-side { border-right:1px solid var(--line); padding-right:24px; }
@@ -238,6 +258,13 @@
   .field input:focus,.field textarea:focus,.field select:focus { outline:none; border-color:var(--accent); }
   .field textarea { min-height:80px; resize:vertical; }
   .field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .gcal-event-item { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed var(--line-soft); gap:10px; }
+  .gcal-event-item:last-child { border-bottom:none; }
+  .gcal-event-item .gei-info { flex:1; cursor:pointer; }
+  .gcal-event-item .gei-time { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); }
+  .gcal-event-item .gei-title { font-size:16px; }
+  .gcal-event-item .gei-del { color:var(--ink-faded); cursor:pointer; font-size:16px; flex-shrink:0; }
+  .gcal-event-item .gei-del:hover { color:var(--urgent); }
   .modal-actions { display:flex; gap:10px; margin-top:24px; padding-top:20px; border-top:1px solid var(--line); }
   .modal-btn { padding:10px 20px; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2px; text-transform:uppercase; border:1px solid var(--ink); background:var(--ink); color:var(--paper); flex:1; transition:all .2s; }
   .modal-btn:hover { background:var(--accent); border-color:var(--accent); }
@@ -368,24 +395,44 @@
   <div class="section-header"><div class="section-header-left">
     <div class="section-label">— calendário</div>
     <h2>O <em>calendário</em></h2>
-    <p class="section-desc">Tarefas nos dias combinados (negrito) e prazos (itálico). Navegue entre os meses.</p>
+    <p class="section-desc">Conectado ao Google Calendar. Toque num dia para criar um evento, ou num evento para editar.</p>
   </div><button class="collapse-btn" onclick="toggleSection('cal-body')">minimizar</button></div>
   <div class="section-body" id="cal-body">
-    <div class="cal-nav">
-      <button id="prev-month">← Anterior</button>
-      <div class="month-name" id="month-name">—</div>
-      <button id="next-month">Próximo →</button>
-    </div>
-    <div class="cal-scroll"><div class="cal-grid" id="cal-grid"></div></div>
-    <div class="cal-legend">
-      <span><span class="dot" style="border-color:var(--todo)"></span> A fazer</span>
-      <span><span class="dot" style="border-color:var(--doing)"></span> Fazendo</span>
-      <span><span class="dot" style="border-color:var(--done)"></span> Feito</span>
-      <span><strong>Negrito</strong> = combinado</span>
-      <span><em>Itálico</em> = prazo</span>
+    <div id="gcal-container">
+      <div class="gcal-connect-wrap">
+        <div class="gcal-icon">📅</div>
+        <h3>Conectar ao <em style="color:var(--accent);font-style:italic;">Google Calendar</em></h3>
+        <p>Conecte sua conta Google para ver e gerenciar os compromissos do casamento direto aqui no painel.</p>
+        <button class="gcal-connect-btn" onclick="gcalConnect()">Conectar Google Calendar</button>
+      </div>
     </div>
   </div>
 </section>
+
+<!-- MODAL: EVENTO GOOGLE CALENDAR -->
+<div class="modal-bg" id="gcal-modal"><div class="modal">
+  <button class="modal-close" onclick="closeGcalModal()">✕</button>
+  <h3 id="gcal-modal-title">Novo <em>evento</em></h3>
+  <div class="sublabel" id="gcal-modal-date-label">— preencha os detalhes</div>
+  <div id="gcal-modal-list" style="margin-bottom:20px;"></div>
+  <div id="gcal-modal-form">
+    <div class="field"><label>Título</label><input type="text" id="gf-title" placeholder="Ex: Visita ao buffet"></div>
+    <div class="field-row">
+      <div class="field"><label>Início</label><input type="time" id="gf-start" value="09:00"></div>
+      <div class="field"><label>Fim</label><input type="time" id="gf-end" value="10:00"></div>
+    </div>
+    <div class="field">
+      <label><input type="checkbox" id="gf-allday" onchange="toggleGcalAllDay()" style="width:auto;display:inline-block;margin-right:6px;"> Dia inteiro</label>
+    </div>
+    <div class="field"><label>Local (opcional)</label><input type="text" id="gf-location" placeholder="Endereço ou link"></div>
+    <div class="field"><label>Descrição (opcional)</label><textarea id="gf-desc" placeholder="Detalhes…"></textarea></div>
+  </div>
+  <div class="modal-actions">
+    <button class="modal-btn danger" id="gcal-btn-delete" style="display:none;" onclick="deleteGcalEvent()">Excluir</button>
+    <button class="modal-btn secondary" onclick="closeGcalModal()">Cancelar</button>
+    <button class="modal-btn" id="gcal-btn-save" onclick="saveGcalEvent()">Salvar</button>
+  </div>
+</div></div>
 
 <section id="timeline">
   <div class="section-header"><div class="section-header-left">
@@ -622,6 +669,13 @@ const BUCKET = 'painel-arquivos';
 const POLL_INTERVAL = 8000;
 const SB_HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
 
+/* ============================================================
+   GOOGLE CALENDAR CONFIG
+   ============================================================ */
+const GCAL_CLIENT_ID = '187488656590-ec70savreg4s5vd8pv6trjedlpmvo9v4.apps.googleusercontent.com';
+const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar';
+const GCAL_TOKEN_KEY = 'mg-painel-gcal-token';
+
 // ===== DADOS INICIAIS =====
 const INITIAL_CATS = ['Fornecedores','Papelaria','Decoração','Homenagens','Interativo','Cerimônia','Família','Digital'];
 const INITIAL_TASKS = [
@@ -702,6 +756,13 @@ let state = {
   editingId:null,editingSupplierId:null,pickingFor:null,
   tempAttachments:[],tempSupAttachments:[],
   boughtTaskId:null,boughtPayment:'cash',
+};
+
+// ===== GOOGLE CALENDAR STATE =====
+let gcal = {
+  tokenClient:null, accessToken:null, tokenExpiry:0,
+  events:[], userEmail:'', currentMonth:new Date(2026,4,1),
+  editingEventId:null, editingDate:null, allDay:false,
 };
 
 // ===== SUPABASE HELPERS =====
@@ -869,7 +930,7 @@ function toggleSection(id) {
   else { b.classList.add('collapsed'); if(btn)btn.textContent='expandir'; }
 }
 function saveAndRender() { saveData(); renderAll(); }
-function renderAll() { renderPriority(); renderCalendar(); renderTimeline(); renderKanban(); renderCategories(); renderFinanceiro(); renderPurchases(); }
+function renderAll() { renderPriority(); renderGcalView(); renderTimeline(); renderKanban(); renderCategories(); renderFinanceiro(); renderPurchases(); }
 
 // ===== RENDER: AGORA =====
 function renderPriority() {
@@ -892,31 +953,334 @@ function renderPriority() {
   }).join('');
 }
 
-// ===== RENDER: CALENDÁRIO =====
-function renderCalendar() {
-  const m=state.currentMonth;
-  const mn=m.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
-  document.getElementById('month-name').textContent=mn.charAt(0).toUpperCase()+mn.slice(1);
-  const fd=new Date(m.getFullYear(),m.getMonth(),1), ld=new Date(m.getFullYear(),m.getMonth()+1,0);
-  const sw=fd.getDay(), dim=ld.getDate(), today=new Date();
-  const isCur=today.getFullYear()===m.getFullYear()&&today.getMonth()===m.getMonth();
-  let html='';
-  DOWS.forEach(d=>html+=`<div class="cal-dow">${d}</div>`);
-  for(let i=0;i<sw;i++) html+='<div class="cal-day empty"></div>';
-  for(let day=1;day<=dim;day++){
-    const ds=`${m.getFullYear()}-${String(m.getMonth()+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-    const isT=isCur&&day===today.getDate();
-    const isW=m.getFullYear()===2026&&m.getMonth()===8&&day===1;
-    const comb=state.tasks.filter(t=>t.dateDo===ds);
-    const dead=state.tasks.filter(t=>t.deadline===ds&&t.dateDo!==ds);
-    let cls='cal-day'; if(isT)cls+=' today'; if(isW)cls+=' wedding';
-    let dh=`<div class="${cls}"><div class="cal-day-num">${day}${isW?' ♥':''}</div>`;
-    comb.forEach(t=>dh+=`<div class="cal-task has-combined" data-status="${t.status}" onclick="openTaskModal(${t.id})" title="${esc(t.name)}">${esc(t.name)}</div>`);
-    dead.forEach(t=>dh+=`<div class="cal-task is-deadline" data-status="${t.status}" onclick="openTaskModal(${t.id})" title="Prazo: ${esc(t.name)}">⏳ ${esc(t.name)}</div>`);
-    dh+='</div>'; html+=dh;
+// ===== GOOGLE CALENDAR: AUTH =====
+function gcalConnect() {
+  if (!window.google || !google.accounts || !google.accounts.oauth2) {
+    alert('Google Identity Services ainda não carregou. Aguarde um instante e tente novamente.');
+    return;
   }
-  document.getElementById('cal-grid').innerHTML=html;
+  if (!gcal.tokenClient) {
+    gcal.tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GCAL_CLIENT_ID,
+      scope: GCAL_SCOPE,
+      callback: (resp) => {
+        if (resp.error) { console.error(resp); alert('Falha ao conectar com o Google: '+resp.error); return; }
+        gcal.accessToken = resp.access_token;
+        gcal.tokenExpiry = Date.now() + (resp.expires_in*1000);
+        try { localStorage.setItem(GCAL_TOKEN_KEY, JSON.stringify({token:resp.access_token, expiry:gcal.tokenExpiry})); } catch{}
+        gcalFetchUserInfo();
+        renderGcalView();
+      }
+    });
+  }
+  gcal.tokenClient.requestAccessToken({prompt: gcal.accessToken ? '' : 'consent'});
 }
+function gcalDisconnect() {
+  if (gcal.accessToken && window.google) {
+    try { google.accounts.oauth2.revoke(gcal.accessToken, ()=>{}); } catch{}
+  }
+  gcal.accessToken = null; gcal.tokenExpiry = 0; gcal.events = []; gcal.userEmail = '';
+  try { localStorage.removeItem(GCAL_TOKEN_KEY); } catch{}
+  renderGcalView();
+}
+function gcalTryRestoreToken() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(GCAL_TOKEN_KEY)||'null');
+    if (saved && saved.token && saved.expiry > Date.now()) {
+      gcal.accessToken = saved.token; gcal.tokenExpiry = saved.expiry;
+      return true;
+    }
+  } catch{}
+  return false;
+}
+async function gcalFetchUserInfo() {
+  try {
+    const res = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', { headers:{ 'Authorization':`Bearer ${gcal.accessToken}` } });
+    if (res.ok) { const d = await res.json(); gcal.userEmail = d.email||''; }
+  } catch{}
+}
+function gcalEnsureToken() {
+  return new Promise((resolve) => {
+    if (gcal.accessToken && gcal.tokenExpiry > Date.now()+30000) { resolve(true); return; }
+    if (!gcal.tokenClient) {
+      gcal.tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GCAL_CLIENT_ID, scope: GCAL_SCOPE,
+        callback: (resp) => {
+          if (resp.error) { resolve(false); return; }
+          gcal.accessToken = resp.access_token;
+          gcal.tokenExpiry = Date.now() + (resp.expires_in*1000);
+          try { localStorage.setItem(GCAL_TOKEN_KEY, JSON.stringify({token:resp.access_token, expiry:gcal.tokenExpiry})); } catch{}
+          resolve(true);
+        }
+      });
+    }
+    gcal.tokenClient.requestAccessToken({prompt:''});
+  });
+}
+
+// ===== GOOGLE CALENDAR: FETCH EVENTS =====
+async function gcalFetchEvents() {
+  const ok = await gcalEnsureToken();
+  if (!ok) { renderGcalError('Sessão expirada. Reconecte sua conta Google.'); return; }
+  const m = gcal.currentMonth;
+  const timeMin = new Date(m.getFullYear(), m.getMonth(), 1).toISOString();
+  const timeMax = new Date(m.getFullYear(), m.getMonth()+1, 1).toISOString();
+  const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&singleEvents=true&orderBy=startTime&maxResults=250`;
+  try {
+    const res = await fetch(url, { headers:{ 'Authorization':`Bearer ${gcal.accessToken}` } });
+    if (res.status === 401) { gcal.accessToken=null; renderGcalError('Sessão expirada. Reconecte sua conta Google.'); return; }
+    if (!res.ok) throw new Error('Falha ao buscar eventos');
+    const data = await res.json();
+    gcal.events = data.items || [];
+    renderGcalGrid();
+  } catch(e) {
+    console.error(e);
+    renderGcalError('Não foi possível carregar os eventos do Google Calendar.');
+  }
+}
+
+// ===== GOOGLE CALENDAR: CRUD =====
+async function gcalCreateEvent(payload) {
+  const ok = await gcalEnsureToken();
+  if (!ok) { alert('Sessão expirada. Reconecte sua conta Google.'); return null; }
+  const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+    method:'POST', headers:{ 'Authorization':`Bearer ${gcal.accessToken}`, 'Content-Type':'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) { const err = await res.json().catch(()=>({})); throw new Error(err.error?.message||'Falha ao criar evento'); }
+  return res.json();
+}
+async function gcalUpdateEvent(eventId, payload) {
+  const ok = await gcalEnsureToken();
+  if (!ok) { alert('Sessão expirada. Reconecte sua conta Google.'); return null; }
+  const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`, {
+    method:'PATCH', headers:{ 'Authorization':`Bearer ${gcal.accessToken}`, 'Content-Type':'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) { const err = await res.json().catch(()=>({})); throw new Error(err.error?.message||'Falha ao atualizar evento'); }
+  return res.json();
+}
+async function gcalDeleteEventApi(eventId) {
+  const ok = await gcalEnsureToken();
+  if (!ok) { alert('Sessão expirada. Reconecte sua conta Google.'); return false; }
+  const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`, {
+    method:'DELETE', headers:{ 'Authorization':`Bearer ${gcal.accessToken}` }
+  });
+  return res.ok || res.status === 410;
+}
+
+// ===== GOOGLE CALENDAR: RENDER =====
+function renderGcalView() {
+  const c = document.getElementById('gcal-container');
+  if (!gcal.accessToken) {
+    c.innerHTML = `<div class="gcal-connect-wrap">
+      <div class="gcal-icon">📅</div>
+      <h3>Conectar ao <em style="color:var(--accent);font-style:italic;">Google Calendar</em></h3>
+      <p>Conecte sua conta Google para ver e gerenciar os compromissos do casamento direto aqui no painel.</p>
+      <button class="gcal-connect-btn" onclick="gcalConnect()">Conectar Google Calendar</button>
+    </div>`;
+    return;
+  }
+  c.innerHTML = `
+    <div class="gcal-bar">
+      <div class="gcal-account">conectado como <strong>${esc(gcal.userEmail||'sua conta Google')}</strong></div>
+      <button class="gcal-disconnect" onclick="gcalDisconnect()">Desconectar</button>
+    </div>
+    <div class="cal-nav">
+      <button id="prev-month">← Anterior</button>
+      <div class="month-name" id="month-name">—</div>
+      <button id="next-month">Próximo →</button>
+    </div>
+    <div id="gcal-body-area"><div class="gcal-loading">— carregando eventos —</div></div>
+    <div class="cal-legend">
+      <span><span class="dot" style="border-color:var(--accent);background:var(--paper-warm);"></span> Evento do Google Calendar</span>
+    </div>
+  `;
+  document.getElementById('prev-month').addEventListener('click', ()=>{ gcal.currentMonth = new Date(gcal.currentMonth.getFullYear(), gcal.currentMonth.getMonth()-1, 1); gcalFetchEvents(); });
+  document.getElementById('next-month').addEventListener('click', ()=>{ gcal.currentMonth = new Date(gcal.currentMonth.getFullYear(), gcal.currentMonth.getMonth()+1, 1); gcalFetchEvents(); });
+  gcalFetchEvents();
+}
+function renderGcalError(msg) {
+  const area = document.getElementById('gcal-body-area');
+  if (area) area.innerHTML = `<div class="gcal-error">${esc(msg)}</div><div style="text-align:center;"><button class="gcal-connect-btn" onclick="gcalConnect()">Reconectar</button></div>`;
+}
+function gcalEventDateStr(ev, which) {
+  // which: 'start' or 'end'
+  const d = ev[which];
+  if (!d) return null;
+  if (d.date) return d.date; // all-day
+  if (d.dateTime) return d.dateTime.slice(0,10);
+  return null;
+}
+function renderGcalGrid() {
+  const m = gcal.currentMonth;
+  const mn = m.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  const monthNameEl = document.getElementById('month-name');
+  if (monthNameEl) monthNameEl.textContent = mn.charAt(0).toUpperCase()+mn.slice(1);
+  const fd = new Date(m.getFullYear(), m.getMonth(), 1), ld = new Date(m.getFullYear(), m.getMonth()+1, 0);
+  const sw = fd.getDay(), dim = ld.getDate(), today = new Date();
+  const isCur = today.getFullYear()===m.getFullYear() && today.getMonth()===m.getMonth();
+
+  // Index events by day
+  const byDay = {};
+  gcal.events.forEach(ev=>{
+    const sd = gcalEventDateStr(ev,'start');
+    if (!sd) return;
+    (byDay[sd] = byDay[sd]||[]).push(ev);
+  });
+
+  let html = '<div class="cal-scroll"><div class="cal-grid">';
+  DOWS.forEach(d=>html+=`<div class="cal-dow">${d}</div>`);
+  for (let i=0;i<sw;i++) html += '<div class="cal-day empty"></div>';
+  for (let day=1; day<=dim; day++) {
+    const ds = `${m.getFullYear()}-${String(m.getMonth()+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const isT = isCur && day===today.getDate();
+    const isW = m.getFullYear()===2026 && m.getMonth()===8 && day===1;
+    let cls='cal-day'; if(isT)cls+=' today'; if(isW)cls+=' wedding';
+    let dh = `<div class="${cls}" onclick="openGcalDayModal('${ds}')"><div class="cal-day-num">${day}${isW?' ♥':''}</div>`;
+    (byDay[ds]||[]).forEach(ev=>{
+      const title = ev.summary || '(sem título)';
+      let timeLabel = '';
+      if (ev.start && ev.start.dateTime) {
+        const t = new Date(ev.start.dateTime);
+        timeLabel = t.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' ';
+      }
+      dh += `<div class="cal-task gcal-event" onclick="event.stopPropagation();openGcalDayModal('${ds}','${ev.id}')" title="${esc(title)}">${timeLabel}${esc(title)}</div>`;
+    });
+    dh += '</div>';
+    html += dh;
+  }
+  html += '</div></div>';
+  const area = document.getElementById('gcal-body-area');
+  if (area) area.innerHTML = html;
+}
+
+// ===== GOOGLE CALENDAR: EVENT MODAL =====
+function openGcalDayModal(dateStr, eventId) {
+  gcal.editingDate = dateStr;
+  gcal.editingEventId = eventId || null;
+  const dayEvents = gcal.events.filter(ev => gcalEventDateStr(ev,'start') === dateStr);
+  const dObj = new Date(dateStr+'T00:00:00');
+  const label = dObj.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('gcal-modal-date-label').textContent = `— ${label}`;
+
+  const listEl = document.getElementById('gcal-modal-list');
+  if (dayEvents.length) {
+    listEl.innerHTML = dayEvents.map(ev=>{
+      const title = ev.summary || '(sem título)';
+      let timeLabel = 'Dia inteiro';
+      if (ev.start && ev.start.dateTime) {
+        const s = new Date(ev.start.dateTime), e2 = ev.end?.dateTime ? new Date(ev.end.dateTime) : null;
+        timeLabel = s.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) + (e2?(' – '+e2.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})):'');
+      }
+      return `<div class="gcal-event-item">
+        <div class="gei-info" onclick="loadGcalEventIntoForm('${ev.id}')">
+          <div class="gei-time">${timeLabel}</div>
+          <div class="gei-title">${esc(title)}</div>
+        </div>
+        <span class="gei-del" onclick="event.stopPropagation();quickDeleteGcalEvent('${ev.id}')">✕</span>
+      </div>`;
+    }).join('');
+  } else {
+    listEl.innerHTML = '';
+  }
+
+  if (eventId) {
+    loadGcalEventIntoForm(eventId);
+  } else {
+    resetGcalForm();
+  }
+  document.getElementById('gcal-modal').classList.add('open');
+}
+function resetGcalForm() {
+  gcal.editingEventId = null;
+  document.getElementById('gcal-modal-title').innerHTML = 'Novo <em>evento</em>';
+  document.getElementById('gf-title').value = '';
+  document.getElementById('gf-start').value = '09:00';
+  document.getElementById('gf-end').value = '10:00';
+  document.getElementById('gf-allday').checked = false;
+  document.getElementById('gf-location').value = '';
+  document.getElementById('gf-desc').value = '';
+  document.getElementById('gcal-btn-delete').style.display = 'none';
+  toggleGcalAllDay();
+}
+function loadGcalEventIntoForm(eventId) {
+  const ev = gcal.events.find(e=>e.id===eventId);
+  if (!ev) return;
+  gcal.editingEventId = eventId;
+  document.getElementById('gcal-modal-title').innerHTML = 'Editar <em>evento</em>';
+  document.getElementById('gf-title').value = ev.summary || '';
+  document.getElementById('gf-location').value = ev.location || '';
+  document.getElementById('gf-desc').value = ev.description || '';
+  const isAllDay = !!(ev.start && ev.start.date);
+  document.getElementById('gf-allday').checked = isAllDay;
+  if (!isAllDay && ev.start?.dateTime) {
+    document.getElementById('gf-start').value = ev.start.dateTime.slice(11,16);
+    document.getElementById('gf-end').value = ev.end?.dateTime ? ev.end.dateTime.slice(11,16) : '10:00';
+  }
+  toggleGcalAllDay();
+  document.getElementById('gcal-btn-delete').style.display = '';
+}
+function toggleGcalAllDay() {
+  const allDay = document.getElementById('gf-allday').checked;
+  gcal.allDay = allDay;
+  document.getElementById('gf-start').closest('.field').style.display = allDay ? 'none' : '';
+  document.getElementById('gf-end').closest('.field').style.display = allDay ? 'none' : '';
+}
+function closeGcalModal() {
+  document.getElementById('gcal-modal').classList.remove('open');
+  gcal.editingEventId = null; gcal.editingDate = null;
+}
+async function saveGcalEvent() {
+  const title = document.getElementById('gf-title').value.trim();
+  if (!title) { alert('Informe um título para o evento.'); return; }
+  const allDay = document.getElementById('gf-allday').checked;
+  const date = gcal.editingDate;
+  let payload = { summary: title, location: document.getElementById('gf-location').value.trim(), description: document.getElementById('gf-desc').value.trim() };
+  if (allDay) {
+    const next = new Date(date+'T00:00:00'); next.setDate(next.getDate()+1);
+    payload.start = { date: date };
+    payload.end = { date: next.toISOString().slice(0,10) };
+  } else {
+    const startT = document.getElementById('gf-start').value || '09:00';
+    const endT = document.getElementById('gf-end').value || '10:00';
+    payload.start = { dateTime: `${date}T${startT}:00`, timeZone: 'America/Sao_Paulo' };
+    payload.end = { dateTime: `${date}T${endT}:00`, timeZone: 'America/Sao_Paulo' };
+  }
+  try {
+    if (gcal.editingEventId) await gcalUpdateEvent(gcal.editingEventId, payload);
+    else await gcalCreateEvent(payload);
+    closeGcalModal();
+    await gcalFetchEvents();
+    setSyncStatus('☁ evento salvo no Google Calendar','ok');
+  } catch(e) {
+    console.error(e);
+    alert('Erro ao salvar evento: '+e.message);
+  }
+}
+async function deleteGcalEvent() {
+  if (!gcal.editingEventId) return;
+  if (!confirm('Excluir este evento do Google Calendar?')) return;
+  try {
+    await gcalDeleteEventApi(gcal.editingEventId);
+    closeGcalModal();
+    await gcalFetchEvents();
+    setSyncStatus('☁ evento excluído','ok');
+  } catch(e) { console.error(e); alert('Erro ao excluir evento.'); }
+}
+async function quickDeleteGcalEvent(eventId) {
+  if (!confirm('Excluir este evento do Google Calendar?')) return;
+  try {
+    await gcalDeleteEventApi(eventId);
+    await gcalFetchEvents();
+    if (document.getElementById('gcal-modal').classList.contains('open')) {
+      openGcalDayModal(gcal.editingDate);
+    }
+    setSyncStatus('☁ evento excluído','ok');
+  } catch(e) { console.error(e); alert('Erro ao excluir evento.'); }
+}
+document.getElementById('gcal-modal').addEventListener('click', e=>{ if(e.target.id==='gcal-modal') closeGcalModal(); });
+
 
 // ===== RENDER: TIMELINE =====
 function renderTimeline() {
@@ -1452,11 +1816,9 @@ function attachDragHandlers() {
 }
 
 // ===== EVENTOS =====
-document.getElementById('prev-month').addEventListener('click',()=>{state.currentMonth=new Date(state.currentMonth.getFullYear(),state.currentMonth.getMonth()-1,1);renderCalendar();});
-document.getElementById('next-month').addEventListener('click',()=>{state.currentMonth=new Date(state.currentMonth.getFullYear(),state.currentMonth.getMonth()+1,1);renderCalendar();});
 document.querySelectorAll('.filter-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');state.filter=btn.dataset.filter;renderKanban();});});
 ['task-modal','orphan-modal','cat-modal','sup-modal','bought-modal'].forEach(id=>{document.getElementById(id).addEventListener('click',e=>{if(e.target.id===id){if(id==='task-modal')closeTaskModal();if(id==='orphan-modal')closeOrphanModal();if(id==='cat-modal')closeCatModal();if(id==='sup-modal')closeSupplierModal();if(id==='bought-modal')closeBoughtModal();}});});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeTaskModal();closeOrphanModal();closeCatModal();closeSupplierModal();closeBoughtModal();closePreview({forceClose:true});}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeTaskModal();closeOrphanModal();closeCatModal();closeSupplierModal();closeBoughtModal();closeGcalModal();closePreview({forceClose:true});}});
 
 // drag & drop na zona de anexo (tarefas)
 const az=document.getElementById('f-attach-zone');
@@ -1474,6 +1836,9 @@ saz.addEventListener('drop',e=>{e.preventDefault();saz.style.borderColor='';if(e
 (async function init() {
   updateCountdown();
   await loadData();
+  if (gcalTryRestoreToken()) {
+    await gcalFetchUserInfo();
+  }
   renderAll();
   setInterval(pollUpdates, POLL_INTERVAL);
 })();
